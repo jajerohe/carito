@@ -42,6 +42,13 @@ Para tenerla como un ícono más en la pantalla de inicio:
    streamlit run app.py
    ```
 
+## Logo y fondo del inicio de sesión
+
+- **Logo:** `logo.png` en la raíz del repositorio (se usa en la app y en el PDF).
+- **Foto de fondo del inicio de sesión (opcional):** subir `fondo_login.jpg`
+  (o `.png` / `.webp`) a la raíz. Se muestra detrás del logo con una capa
+  clara encima. Recomendado: horizontal, menos de 500 KB.
+
 ## Cambiar el formato
 
 Todas las preguntas del formulario están en `formulario.py`. Para agregar,

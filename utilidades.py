@@ -9,6 +9,13 @@ LOGO = next(
      if os.path.exists(os.path.join(DIRECTORIO, n))),
     os.path.join(DIRECTORIO, "logo.png"),
 )
+# Foto opcional de fondo para la pantalla de inicio de sesión.
+FONDO_LOGIN = next(
+    (os.path.join(DIRECTORIO, n) for n in
+     ("fondo_login.jpg", "fondo_login.jpeg", "fondo_login.png", "fondo_login.webp")
+     if os.path.exists(os.path.join(DIRECTORIO, n))),
+    None,
+)
 
 CLINICA_POR_DEFECTO = {
     "nombre": "Carolina Rodríguez H. - Ortodoncia & Ortopedia Maxilar",

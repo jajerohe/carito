@@ -1,3 +1,5 @@
+import base64
+import mimetypes
 import os
 
 import streamlit as st
@@ -5,7 +7,7 @@ import streamlit as st
 import repositorio as repo
 from database import ErrorConexion
 from pdf import PARTES, generar_pdf
-from utilidades import LOGO, calcular_edad, nombre_completo
+from utilidades import FONDO_LOGIN, LOGO, calcular_edad, nombre_completo
 from vistas.historia import pagina_consentimiento, pagina_historia, pagina_ortodoncia
 from vistas.pacientes import pagina_pacientes
 from vistas.seguimiento import pagina_evolucion, pagina_pagos
@@ -106,10 +108,34 @@ div[data-testid="stColumn"]:has(.login-acceso) [data-testid="stForm"] {
 """
 
 
+@st.cache_data
+def _imagen_en_base64(ruta, _modificado):
+    tipo = mimetypes.guess_type(ruta)[0] or "image/jpeg"
+    with open(ruta, "rb") as f:
+        return f"data:{tipo};base64,{base64.b64encode(f.read()).decode()}"
+
+
+def _estilo_fondo_login():
+    """Si hay una foto fondo_login.*, se pone detrás del logo con una capa clara encima."""
+    if not FONDO_LOGIN:
+        return ""
+    imagen = _imagen_en_base64(FONDO_LOGIN, os.path.getmtime(FONDO_LOGIN))
+    return f"""
+<style>
+div[data-testid="stColumn"]:has(.login-marca) {{
+    background:
+        linear-gradient(160deg, rgba(234, 242, 253, 0.80) 0%,
+                        rgba(227, 236, 251, 0.74) 55%, rgba(236, 230, 250, 0.80) 100%),
+        url("{imagen}") center / cover no-repeat;
+}}
+</style>
+"""
+
+
 def pantalla_login():
     from auth import iniciar_sesion
 
-    st.markdown(ESTILO_LOGIN, unsafe_allow_html=True)
+    st.markdown(ESTILO_LOGIN + _estilo_fondo_login(), unsafe_allow_html=True)
     marca, acceso = st.columns(2)
 
     with marca:
