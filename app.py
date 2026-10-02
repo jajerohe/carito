@@ -12,7 +12,7 @@ from vistas.historia import pagina_consentimiento, pagina_historia, pagina_ortod
 from vistas.pacientes import pagina_pacientes
 from vistas.seguimiento import pagina_evolucion, pagina_pagos
 
-st.set_page_config(page_title="SICOR · Historia Clínica de Ortodoncia", page_icon="🦷",
+st.set_page_config(page_title="SICOR - Historia Clínica de Ortodoncia y Ortopedia Maxilar", page_icon="🦷",
                    layout="wide")
 
 # Estilo general con los colores de SICOR y ajustes para celular.
