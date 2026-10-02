@@ -15,6 +15,15 @@ ortodoncia, tomando como modelo el formato en papel del consultorio.
 | **Evolución** | Controles y procedimientos por fecha; controles realizados vs. proyectados |
 | **Imprimir** | PDF para firmar: historia + anexo, consentimiento, hoja de evolución y estado de cuenta |
 
+## Celular y tablet
+
+La app funciona en el navegador del celular o la tablet, sin instalar nada:
+el menú aparece arriba de cada pantalla junto con el paciente abierto.
+Para tenerla como un ícono más en la pantalla de inicio:
+
+- **Android (Chrome):** abrir la app → menú ⋮ → *Agregar a pantalla principal*.
+- **iPhone / iPad (Safari):** abrir la app → botón Compartir → *Agregar a inicio*.
+
 ## Instalación
 
 1. **Base de datos.** En Supabase, abrir *SQL Editor* y ejecutar

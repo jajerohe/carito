@@ -13,6 +13,18 @@ from vistas.seguimiento import pagina_evolucion, pagina_pagos
 st.set_page_config(page_title="Historia Clínica de Ortodoncia", page_icon="🦷",
                    layout="wide")
 
+# Ajustes para celular: títulos más pequeños y menos margen.
+st.markdown("""
+<style>
+@media (max-width: 640px) {
+    .block-container { padding: 3.5rem 0.75rem 3rem !important; }
+    h1 { font-size: 1.6rem !important; }
+    h2 { font-size: 1.3rem !important; }
+    h3 { font-size: 1.1rem !important; }
+}
+</style>
+""", unsafe_allow_html=True)
+
 PAGINAS_HISTORIA = {
     "Historia clínica": pagina_historia,
     "Anexo de ortodoncia": pagina_ortodoncia,
@@ -20,6 +32,11 @@ PAGINAS_HISTORIA = {
     "Consentimiento": pagina_consentimiento,
     "Evolución": pagina_evolucion,
     "Imprimir": None,
+}
+ICONOS = {
+    "Pacientes": "🔍", "Historia clínica": "📋", "Anexo de ortodoncia": "🦷",
+    "Presupuesto y pagos": "💲", "Consentimiento": "✍️", "Evolución": "📅",
+    "Imprimir": "🖨️",
 }
 
 
@@ -99,13 +116,6 @@ def barra_lateral(usuario):
             if historia:
                 st.caption(f"Historia #{historia['id']} · {historia['estado']}")
 
-        opciones = ["Pacientes"] + (list(PAGINAS_HISTORIA) if historia else [])
-        if "ir_a" in st.session_state:
-            st.session_state["pagina"] = st.session_state.pop("ir_a")
-        if st.session_state.get("pagina") not in opciones:
-            st.session_state["pagina"] = "Pacientes"
-        pagina = st.radio("Menú", opciones, key="pagina", label_visibility="collapsed")
-
         st.divider()
         if st.button("Cerrar sesión"):
             from auth import cerrar_sesion
@@ -114,7 +124,34 @@ def barra_lateral(usuario):
             st.session_state.clear()
             st.rerun()
 
-    return pagina, paciente, historia
+    return paciente, historia
+
+
+def menu_superior(paciente, historia):
+    """
+    Menú en la parte superior de cada pantalla. En celular la barra lateral
+    queda oculta, así que el menú y el paciente abierto deben verse aquí.
+    """
+    if paciente:
+        texto = f"**{nombre_completo(paciente)}** · {paciente['documento']}"
+        if historia:
+            texto += f" · Historia #{historia['id']} ({historia['estado'].lower()})"
+        st.caption(texto)
+
+    opciones = ["Pacientes"] + (list(PAGINAS_HISTORIA) if historia else [])
+    if "ir_a" in st.session_state:
+        st.session_state["pagina"] = st.session_state.pop("ir_a")
+    if st.session_state.get("pagina") not in opciones:
+        st.session_state["pagina"] = st.session_state.get("ultima_pagina", "Pacientes")
+        if st.session_state["pagina"] not in opciones:
+            st.session_state["pagina"] = "Pacientes"
+
+    pagina = st.pills("Menú", opciones, key="pagina", label_visibility="collapsed",
+                      format_func=lambda o: f"{ICONOS[o]} {o}")
+    # Al tocar la opción ya seleccionada, st.pills la deselecciona: se mantiene la anterior.
+    pagina = pagina or st.session_state.get("ultima_pagina", "Pacientes")
+    st.session_state["ultima_pagina"] = pagina
+    return pagina
 
 
 def main():
@@ -123,7 +160,8 @@ def main():
         pantalla_login()
         return
 
-    pagina, paciente, historia = barra_lateral(usuario)
+    paciente, historia = barra_lateral(usuario)
+    pagina = menu_superior(paciente, historia)
 
     # El PDF generado pertenece a una historia; se descarta al cambiar.
     if st.session_state.get("pdf_historia") != st.session_state.get("historia_id"):
