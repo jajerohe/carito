@@ -2,7 +2,13 @@ import os
 from datetime import date
 
 DIRECTORIO = os.path.dirname(os.path.abspath(__file__))
-LOGO = os.path.join(DIRECTORIO, "logo.jpg")
+# Se usa logo.png si existe; si no, logo.jpg. Para cambiar el logo basta con
+# subir un archivo con uno de esos nombres a la raíz del repositorio.
+LOGO = next(
+    (os.path.join(DIRECTORIO, n) for n in ("logo.png", "logo.jpg")
+     if os.path.exists(os.path.join(DIRECTORIO, n))),
+    os.path.join(DIRECTORIO, "logo.png"),
+)
 
 CLINICA_POR_DEFECTO = {
     "nombre": "Carolina Rodríguez H. - Ortodoncia & Ortopedia Maxilar",

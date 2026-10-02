@@ -9,6 +9,7 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
+from reportlab.lib.utils import ImageReader
 from reportlab.platypus import (
     KeepTogether, PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table,
     TableStyle,
@@ -238,10 +239,13 @@ def _parte_cuenta(paciente, historia, cuenta):
 def _pie(canvas, doc):
     canvas.saveState()
     if os.path.exists(LOGO):
-        alto = 1.6 * cm
-        ancho = alto * 1237 / 421
-        canvas.drawImage(LOGO, (LETTER[0] - ancho) / 2, LETTER[1] - alto - 0.6 * cm,
-                         width=ancho, height=alto, preserveAspectRatio=True)
+        imagen = ImageReader(LOGO)
+        ancho_px, alto_px = imagen.getSize()
+        # Cabe en 1,6 cm de alto y como máximo 9 cm de ancho, sin deformarse.
+        escala = min(1.6 * cm / alto_px, 9 * cm / ancho_px)
+        ancho, alto = ancho_px * escala, alto_px * escala
+        canvas.drawImage(imagen, (LETTER[0] - ancho) / 2, LETTER[1] - alto - 0.6 * cm,
+                         width=ancho, height=alto, mask="auto")
     canvas.setFont("Helvetica", 7.5)
     canvas.setFillColor(colors.grey)
     canvas.drawRightString(LETTER[0] - 1.5 * cm, 1 * cm, f"PÁGINA {doc.page}")
