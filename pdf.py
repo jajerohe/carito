@@ -24,8 +24,8 @@ from utilidades import (
     nombre_completo,
 )
 
-COLOR = colors.HexColor("#7b5ea7")
-GRIS = colors.HexColor("#efeaf6")
+COLOR = colors.HexColor("#1E3A8A")
+GRIS = colors.HexColor("#E8EEFA")
 ANCHO = LETTER[0] - 3 * cm
 
 _base = getSampleStyleSheet()

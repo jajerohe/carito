@@ -13,9 +13,19 @@ from vistas.seguimiento import pagina_evolucion, pagina_pagos
 st.set_page_config(page_title="SICOR · Historia Clínica de Ortodoncia", page_icon="🦷",
                    layout="wide")
 
-# Ajustes para celular: títulos más pequeños y menos margen.
+# Estilo general con los colores de SICOR y ajustes para celular.
 st.markdown("""
 <style>
+h1, h2, h3 { color: #0B2A6F; }
+button[kind="primary"], button[kind="primaryFormSubmit"] {
+    background: linear-gradient(90deg, #1F6FE0 0%, #5B4FE0 55%, #8E3FD1 100%) !important;
+    border: none !important;
+    box-shadow: 0 4px 14px rgba(47, 91, 216, 0.25);
+}
+button[kind="primary"]:hover, button[kind="primaryFormSubmit"]:hover {
+    filter: brightness(1.07);
+}
+section[data-testid="stSidebar"] { border-right: 1px solid #DCE5F5; }
 @media (max-width: 640px) {
     .block-container { padding: 3.5rem 0.75rem 3rem !important; }
     h1 { font-size: 1.6rem !important; }
@@ -44,23 +54,96 @@ ICONOS = {
 # Inicio de sesión
 # ============================================================
 
+ESTILO_LOGIN = """
+<style>
+/* Pantalla de acceso en dos mitades: marca a la izquierda, acceso a la derecha */
+header[data-testid="stHeader"] { display: none; }
+/* Los bloques que solo traen estilos no deben ocupar espacio */
+div[data-testid="stElementContainer"]:has(> div > style),
+div[data-testid="stElementContainer"]:has(style) { display: none; }
+[data-testid="stMainBlockContainer"] [data-testid="stVerticalBlock"] { gap: 0; }
+[data-testid="stForm"] [data-testid="stVerticalBlock"] { gap: 1rem; }
+.block-container, [data-testid="stMainBlockContainer"] {
+    padding: 0 !important; max-width: 100% !important;
+}
+div[data-testid="stHorizontalBlock"]:has(.login-marca) { gap: 0 !important; min-height: 100vh; }
+div[data-testid="stColumn"]:has(.login-marca) {
+    background:
+        radial-gradient(circle at 15% 20%, rgba(25, 181, 216, 0.16), transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(142, 63, 209, 0.14), transparent 45%),
+        linear-gradient(160deg, #EAF2FD 0%, #E3ECFB 55%, #ECE6FA 100%);
+    border-right: 1px solid #DCE5F5;
+}
+div[data-testid="stColumn"]:has(.login-marca),
+div[data-testid="stColumn"]:has(.login-acceso) { min-height: 100vh; }
+div[data-testid="stColumn"]:has(.login-marca) > div,
+div[data-testid="stColumn"]:has(.login-acceso) > div {
+    height: 100%; display: flex; flex-direction: column; justify-content: center;
+}
+div[data-testid="stColumn"]:has(.login-marca) > div { padding: 2rem 3.5rem; }
+div[data-testid="stColumn"]:has(.login-acceso) > div { padding: 2rem 1.5rem; }
+.login-acceso { text-align: center; }
+.login-acceso h3 { color: #0B2A6F; font-weight: 700; font-size: 1.75rem !important;
+                   margin: 0; padding: 0 0 0.3rem; }
+.login-acceso p { color: #5A6785; font-size: 1.05rem; margin: 0 0 1.4rem; }
+div[data-testid="stColumn"]:has(.login-acceso) [data-testid="stForm"] {
+    background: #FFFFFF; border: 1px solid #E1E8F5; border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(11, 42, 111, 0.08); padding: 1.6rem 1.6rem 1.2rem;
+}
+.login-pie { text-align: center; color: #5A6785; font-size: 0.83rem;
+             line-height: 1.5; margin-top: 1.8rem; }
+.login-pie p { margin: 0 0 0.8rem; }
+.login-pie b { color: #0B2A6F; }
+.login-pie .firma { font-size: 0.78rem; letter-spacing: 0.02em; }
+@media (max-width: 640px) {
+    div[data-testid="stHorizontalBlock"]:has(.login-marca),
+    div[data-testid="stColumn"]:has(.login-marca),
+    div[data-testid="stColumn"]:has(.login-acceso) { min-height: auto; }
+    div[data-testid="stColumn"]:has(.login-marca) > div { padding: 2.5rem 1.5rem 2rem; }
+    div[data-testid="stColumn"]:has(.login-acceso) > div { padding: 2rem 1rem; }
+}
+</style>
+"""
+
+
 def pantalla_login():
     from auth import iniciar_sesion
 
-    _, centro, _ = st.columns([1, 1.2, 1])
-    with centro:
+    st.markdown(ESTILO_LOGIN, unsafe_allow_html=True)
+    marca, acceso = st.columns(2)
+
+    with marca:
+        st.markdown('<div class="login-marca"></div>', unsafe_allow_html=True)
         if os.path.exists(LOGO):
-            st.image(LOGO)
-        with st.form("login"):
-            email = st.text_input("Correo")
-            password = st.text_input("Contraseña", type="password")
-            if st.form_submit_button("Ingresar", type="primary", use_container_width=True):
+            st.image(LOGO, use_container_width=True)
+
+    with acceso:
+        st.markdown(
+            '<div class="login-acceso"><h3>Bienvenido de nuevo</h3>'
+            '<p>Ingresa con tus credenciales para continuar</p></div>',
+            unsafe_allow_html=True,
+        )
+        _, centro, _ = st.columns([0.12, 0.76, 0.12])
+        with centro:
+            with st.form("login"):
+                email = st.text_input("Correo")
+                password = st.text_input("Contraseña", type="password")
+                entrar = st.form_submit_button("Ingresar", type="primary",
+                                               use_container_width=True)
+            if entrar:
                 try:
                     respuesta = iniciar_sesion(email.strip(), password)
                     st.session_state["usuario"] = respuesta.user.email
                     st.rerun()
                 except Exception as e:
                     st.error(str(e))
+        st.markdown(
+            '<div class="login-pie"><p><b>SICOR</b> · Sistema de Información Clínica '
+            'para Pacientes de Ortodoncia y Ortopedia Maxilar<br>'
+            'Acceso protegido mediante autenticación segura.</p>'
+            '<p class="firma">Powered by <b>JAJEROHE Systems</b></p></div>',
+            unsafe_allow_html=True,
+        )
 
 
 def usuario_actual():
