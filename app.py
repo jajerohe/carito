@@ -84,6 +84,20 @@ div[data-testid="stColumn"]:has(.login-acceso) > div {
 }
 div[data-testid="stColumn"]:has(.login-marca) > div { padding: 2rem 3.5rem; }
 div[data-testid="stColumn"]:has(.login-acceso) > div { padding: 2rem 1.5rem; }
+/* Logo de la marca: tamaño moderado y centrado */
+div[data-testid="stColumn"]:has(.login-marca) [data-testid="stImage"],
+div[data-testid="stColumn"]:has(.login-marca) [data-testid="stImageContainer"] {
+    display: flex; justify-content: center; width: 100%;
+}
+div[data-testid="stColumn"]:has(.login-marca) [data-testid="stImage"] img {
+    display: block; margin: 0 auto;
+    width: min(440px, 62%) !important; max-width: 100%; height: auto;
+    filter: drop-shadow(0 12px 24px rgba(11, 42, 111, 0.12));
+}
+div[data-testid="stColumn"]:has(.login-marca) [data-testid="stImage"] > div,
+div[data-testid="stColumn"]:has(.login-marca) [data-testid="stElementContainer"] {
+    width: 100% !important;
+}
 .login-acceso { text-align: center; }
 .login-acceso h3 { color: #0B2A6F; font-weight: 700; font-size: 1.75rem !important;
                    margin: 0; padding: 0 0 0.3rem; }
@@ -102,6 +116,7 @@ div[data-testid="stColumn"]:has(.login-acceso) [data-testid="stForm"] {
     div[data-testid="stColumn"]:has(.login-marca),
     div[data-testid="stColumn"]:has(.login-acceso) { min-height: auto; }
     div[data-testid="stColumn"]:has(.login-marca) > div { padding: 2.5rem 1.5rem 2rem; }
+    div[data-testid="stColumn"]:has(.login-marca) [data-testid="stImage"] img { width: 78% !important; }
     div[data-testid="stColumn"]:has(.login-acceso) > div { padding: 2rem 1rem; }
 }
 </style>
