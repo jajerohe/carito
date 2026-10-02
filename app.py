@@ -3,6 +3,7 @@ import os
 import streamlit as st
 
 import repositorio as repo
+from database import ErrorConexion
 from pdf import PARTES, generar_pdf
 from utilidades import LOGO, calcular_edad, nombre_completo
 from vistas.historia import pagina_consentimiento, pagina_historia, pagina_ortodoncia
@@ -137,4 +138,7 @@ def main():
         PAGINAS_HISTORIA[pagina](historia, paciente, usuario)
 
 
-main()
+try:
+    main()
+except ErrorConexion as e:
+    st.error(str(e), icon="🔌")
