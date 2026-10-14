@@ -13,7 +13,7 @@ from vistas.pacientes import pagina_pacientes
 from vistas.seguimiento import pagina_evolucion, pagina_pagos
 
 st.set_page_config(page_title="SICOR - Historia Clínica de Ortodoncia y Ortopedia Maxilar", page_icon="🦷",
-                   layout="wide")
+                   layout="wide", initial_sidebar_state="collapsed")
 
 # Estilo general con los colores de SICOR y ajustes para celular.
 st.markdown("""
@@ -28,6 +28,28 @@ button[kind="primary"]:hover, button[kind="primaryFormSubmit"]:hover {
     filter: brightness(1.07);
 }
 section[data-testid="stSidebar"] { border-right: 1px solid #DCE5F5; }
+/* Barra lateral desplegable: arranca cerrada, se abre con el botón ☰ flotando
+   sobre el contenido (no lo empuja ni lo encoge) y se cierra al hacer clic fuera. */
+[data-testid="stExpandSidebarButton"] {
+    width: 40px !important; height: 40px !important; border-radius: 8px !important;
+    background: linear-gradient(160deg, #1F6FE0 0%, #5B4FE0 55%, #8E3FD1 100%) !important;
+    box-shadow: 0 2px 6px rgba(47, 91, 216, 0.3) !important;
+    display: flex !important; align-items: center; justify-content: center;
+    transition: transform .15s, box-shadow .15s;
+}
+[data-testid="stExpandSidebarButton"]:hover { transform: scale(1.06); box-shadow: 0 3px 10px rgba(47, 91, 216, 0.4) !important; }
+[data-testid="stExpandSidebarButton"] span { display: none !important; }
+[data-testid="stExpandSidebarButton"]::before {
+    content: ""; width: 18px; height: 2px; border-radius: 2px; background: #fff;
+    box-shadow: 0 -6px 0 #fff, 0 6px 0 #fff;
+}
+section[data-testid="stSidebar"] { position: fixed !important; top: 0; left: 0; height: 100vh !important; z-index: 1000001 !important; }
+section[data-testid="stSidebar"][aria-expanded="true"] { box-shadow: 6px 0 24px rgba(11, 42, 111, 0.18) !important; }
+[data-testid="stSidebarResizeHandle"] { display: none !important; }
+[data-testid="stSidebarCollapseButton"] { display: flex !important; }
+/* Los bloques que solo traen estilos o scripts no deben ocupar espacio */
+[data-testid="stMainBlockContainer"] div[data-testid="stElementContainer"]:has(style),
+[data-testid="stMainBlockContainer"] div[data-testid="stElementContainer"]:has(script) { display: none; }
 @media (max-width: 640px) {
     .block-container { padding: 3.5rem 0.75rem 3rem !important; }
     h1 { font-size: 1.6rem !important; }
@@ -36,6 +58,21 @@ section[data-testid="stSidebar"] { border-right: 1px solid #DCE5F5; }
 }
 </style>
 """, unsafe_allow_html=True)
+st.html("""
+<script>
+(() => {
+    if (window.menuDesplegable) return;
+    window.menuDesplegable = true;
+    document.addEventListener("click", (e) => {
+        const menu = document.querySelector('section[data-testid="stSidebar"]');
+        if (!menu || menu.getAttribute("aria-expanded") !== "true") return;
+        if (menu.contains(e.target) || e.target.closest('[data-testid="stExpandSidebarButton"]')) return;
+        const boton = document.querySelector('[data-testid="stSidebarCollapseButton"] button');
+        if (boton) boton.click();
+    }, true);
+})();
+</script>
+""", unsafe_allow_javascript=True)
 
 PAGINAS_HISTORIA = {
     "Historia clínica": pagina_historia,
