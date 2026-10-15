@@ -1,6 +1,9 @@
 import base64
+import html
 import mimetypes
 import os
+import re
+import unicodedata
 
 import streamlit as st
 
@@ -13,7 +16,7 @@ from vistas.pacientes import pagina_pacientes
 from vistas.seguimiento import pagina_evolucion, pagina_pagos
 
 st.set_page_config(page_title="SICOR - Historia Clínica de Ortodoncia y Ortopedia Maxilar", page_icon="🦷",
-                   layout="wide", initial_sidebar_state="collapsed")
+                   layout="wide", initial_sidebar_state="expanded")
 
 # Estilo general con los colores de SICOR y ajustes para celular.
 st.markdown("""
@@ -27,26 +30,6 @@ button[kind="primary"], button[kind="primaryFormSubmit"] {
 button[kind="primary"]:hover, button[kind="primaryFormSubmit"]:hover {
     filter: brightness(1.07);
 }
-section[data-testid="stSidebar"] { border-right: 1px solid #DCE5F5; }
-/* Barra lateral desplegable: arranca cerrada, se abre con el botón ☰ flotando
-   sobre el contenido (no lo empuja ni lo encoge) y se cierra al hacer clic fuera. */
-[data-testid="stExpandSidebarButton"] {
-    width: 40px !important; height: 40px !important; border-radius: 8px !important;
-    background: linear-gradient(160deg, #1F6FE0 0%, #5B4FE0 55%, #8E3FD1 100%) !important;
-    box-shadow: 0 2px 6px rgba(47, 91, 216, 0.3) !important;
-    display: flex !important; align-items: center; justify-content: center;
-    transition: transform .15s, box-shadow .15s;
-}
-[data-testid="stExpandSidebarButton"]:hover { transform: scale(1.06); box-shadow: 0 3px 10px rgba(47, 91, 216, 0.4) !important; }
-[data-testid="stExpandSidebarButton"] span { display: none !important; }
-[data-testid="stExpandSidebarButton"]::before {
-    content: ""; width: 18px; height: 2px; border-radius: 2px; background: #fff;
-    box-shadow: 0 -6px 0 #fff, 0 6px 0 #fff;
-}
-section[data-testid="stSidebar"] { position: fixed !important; top: 0; left: 0; height: 100vh !important; z-index: 1000001 !important; }
-section[data-testid="stSidebar"][aria-expanded="true"] { box-shadow: 6px 0 24px rgba(11, 42, 111, 0.18) !important; }
-[data-testid="stSidebarResizeHandle"] { display: none !important; }
-[data-testid="stSidebarCollapseButton"] { display: flex !important; }
 /* Los bloques que solo traen estilos o scripts no deben ocupar espacio */
 [data-testid="stMainBlockContainer"] div[data-testid="stElementContainer"]:has(style),
 [data-testid="stMainBlockContainer"] div[data-testid="stElementContainer"]:has(script) { display: none; }
@@ -58,21 +41,6 @@ section[data-testid="stSidebar"][aria-expanded="true"] { box-shadow: 6px 0 24px 
 }
 </style>
 """, unsafe_allow_html=True)
-st.html("""
-<script>
-(() => {
-    if (window.menuDesplegable) return;
-    window.menuDesplegable = true;
-    document.addEventListener("click", (e) => {
-        const menu = document.querySelector('section[data-testid="stSidebar"]');
-        if (!menu || menu.getAttribute("aria-expanded") !== "true") return;
-        if (menu.contains(e.target) || e.target.closest('[data-testid="stExpandSidebarButton"]')) return;
-        const boton = document.querySelector('[data-testid="stSidebarCollapseButton"] button');
-        if (boton) boton.click();
-    }, true);
-})();
-</script>
-""", unsafe_allow_javascript=True)
 
 PAGINAS_HISTORIA = {
     "Historia clínica": pagina_historia,
@@ -83,9 +51,10 @@ PAGINAS_HISTORIA = {
     "Imprimir": None,
 }
 ICONOS = {
-    "Pacientes": "🔍", "Historia clínica": "📋", "Anexo de ortodoncia": "🦷",
-    "Presupuesto y pagos": "💲", "Consentimiento": "✍️", "Evolución": "📅",
-    "Imprimir": "🖨️",
+    "Pacientes": ":material/person_search:", "Historia clínica": ":material/assignment:",
+    "Anexo de ortodoncia": ":material/dentistry:", "Presupuesto y pagos": ":material/payments:",
+    "Consentimiento": ":material/draw:", "Evolución": ":material/event_note:",
+    "Imprimir": ":material/print:",
 }
 
 
@@ -93,71 +62,65 @@ ICONOS = {
 # Inicio de sesión
 # ============================================================
 
+MANCHA_LOGIN = base64.b64encode(
+    b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 480">'
+    b'<path fill="#E6EDFA" d="M190 20c120-25 230 15 270 85 30 55 110 60 125 150 15 90-50 165-150 185'
+    b'-90 18-150-25-235-10C110 445 30 420 12 330 0 265 45 230 35 165 25 95 90 40 190 20z"/></svg>'
+).decode()
+
 ESTILO_LOGIN = """
 <style>
-/* Pantalla de acceso en dos mitades: marca a la izquierda, acceso a la derecha */
-header[data-testid="stHeader"] { display: none; }
+/* Pantalla de acceso: logo arriba y tarjeta centrada sobre una mancha suave */
+[data-testid="stSidebar"] { display: none !important; }
+header[data-testid="stHeader"] { display: none !important; }
+html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] { background: #F7F9FD !important; }
+.block-container, [data-testid="stMainBlockContainer"] { padding: 0 1rem !important; max-width: 100% !important; }
 /* Los bloques que solo traen estilos no deben ocupar espacio */
-div[data-testid="stElementContainer"]:has(> div > style),
 div[data-testid="stElementContainer"]:has(style) { display: none; }
 [data-testid="stMainBlockContainer"] [data-testid="stVerticalBlock"] { gap: 0; }
-[data-testid="stForm"] [data-testid="stVerticalBlock"] { gap: 1rem; }
-.block-container, [data-testid="stMainBlockContainer"] {
-    padding: 0 !important; max-width: 100% !important;
+
+.login-logo { text-align: center; padding: 56px 0 0; }
+.login-logo img { width: 230px; max-width: 70%; height: auto; }
+.st-key-login_zona {
+    max-width: 600px; margin: 0 auto; padding: 110px 0 80px;
+    background: url("data:image/svg+xml;base64,MANCHA") center / 100% auto no-repeat;
 }
-div[data-testid="stHorizontalBlock"]:has(.login-marca) { gap: 0 !important; min-height: 100vh; }
-div[data-testid="stColumn"]:has(.login-marca) {
-    background:
-        radial-gradient(circle at 15% 20%, rgba(25, 181, 216, 0.16), transparent 45%),
-        radial-gradient(circle at 85% 85%, rgba(142, 63, 209, 0.14), transparent 45%),
-        linear-gradient(160deg, #EAF2FD 0%, #E3ECFB 55%, #ECE6FA 100%);
-    border-right: 1px solid #DCE5F5;
+.st-key-login_tarjeta {
+    width: 100%; max-width: 385px; margin: 0 auto; background: #FFFFFF; border-radius: 6px;
+    box-shadow: 0 4px 18px rgba(11, 42, 111, 0.07); padding: 0 45px 35px; overflow: visible;
 }
-div[data-testid="stColumn"]:has(.login-marca),
-div[data-testid="stColumn"]:has(.login-acceso) { min-height: 100vh; }
-div[data-testid="stColumn"]:has(.login-marca) > div,
-div[data-testid="stColumn"]:has(.login-acceso) > div {
-    height: 100%; display: flex; flex-direction: column; justify-content: center;
+.login-icono {
+    width: 86px; height: 86px; margin: -43px auto 22px; border-radius: 50%;
+    background: linear-gradient(160deg, #1F6FE0 0%, #5B4FE0 55%, #8E3FD1 100%);
+    box-shadow: 0 6px 16px rgba(47, 91, 216, 0.28);
+    display: flex; align-items: center; justify-content: center;
 }
-div[data-testid="stColumn"]:has(.login-marca) > div { padding: 2rem 3.5rem; }
-div[data-testid="stColumn"]:has(.login-acceso) > div { padding: 2rem 1.5rem; }
-/* Logo de la marca: tamaño moderado y centrado */
-div[data-testid="stColumn"]:has(.login-marca) [data-testid="stImage"],
-div[data-testid="stColumn"]:has(.login-marca) [data-testid="stImageContainer"] {
-    display: flex; justify-content: center; width: 100%;
+.login-titulo { text-align: center; color: #0B2A6F; font-size: 1.3rem; font-weight: 700;
+                line-height: 1.3; margin: 0 0 26px; }
+.st-key-login_tarjeta [data-testid="stForm"] { border: none; padding: 0; }
+.st-key-login_tarjeta [data-testid="stForm"] [data-testid="stVerticalBlock"] { gap: 14px; }
+.st-key-login_tarjeta [data-testid="stTextInputRootElement"] {
+    background: #FFFFFF !important; border: 1px solid #C9D3E6 !important; border-radius: 3px !important;
 }
-div[data-testid="stColumn"]:has(.login-marca) [data-testid="stImage"] img {
-    display: block; margin: 0 auto;
-    width: min(440px, 62%) !important; max-width: 100%; height: auto;
-    filter: drop-shadow(0 12px 24px rgba(11, 42, 111, 0.12));
+.st-key-login_tarjeta [data-testid="stTextInput"] input {
+    background: #FFFFFF !important; min-height: 40px; padding-left: 18px; font-size: 0.9rem;
 }
-div[data-testid="stColumn"]:has(.login-marca) [data-testid="stImage"] > div,
-div[data-testid="stColumn"]:has(.login-marca) [data-testid="stElementContainer"] {
-    width: 100% !important;
+.st-key-login_tarjeta [data-testid="stTextInputRootElement"]:focus-within {
+    border-color: #5B4FE0 !important; box-shadow: 0 0 0 1px #5B4FE0 !important;
 }
-.login-acceso { text-align: center; }
-.login-acceso h3 { color: #0B2A6F; font-weight: 700; font-size: 1.75rem !important;
-                   margin: 0; padding: 0 0 0.3rem; }
-.login-acceso p { color: #5A6785; font-size: 1.05rem; margin: 0 0 1.4rem; }
-div[data-testid="stColumn"]:has(.login-acceso) [data-testid="stForm"] {
-    background: #FFFFFF; border: 1px solid #E1E8F5; border-radius: 14px;
-    box-shadow: 0 10px 30px rgba(11, 42, 111, 0.08); padding: 1.6rem 1.6rem 1.2rem;
+.st-key-login_tarjeta div[data-testid="stFormSubmitButton"] button {
+    border-radius: 3px !important; min-height: 36px !important; font-weight: 700 !important; margin-top: 2px;
 }
-.login-pie { text-align: center; color: #5A6785; font-size: 0.83rem;
-             line-height: 1.5; margin-top: 1.8rem; }
-.login-pie p { margin: 0 0 0.8rem; }
+.st-key-login_tarjeta [data-testid="stAlert"] { margin-top: 12px; }
+.login-pie { text-align: center; color: #7A86A3; font-size: 0.78rem; line-height: 1.5; padding: 0 0 28px; }
 .login-pie b { color: #0B2A6F; }
-.login-pie .firma { font-size: 0.78rem; letter-spacing: 0.02em; }
 @media (max-width: 640px) {
-    div[data-testid="stHorizontalBlock"]:has(.login-marca),
-    div[data-testid="stColumn"]:has(.login-marca),
-    div[data-testid="stColumn"]:has(.login-acceso) { min-height: auto; }
-    div[data-testid="stColumn"]:has(.login-marca) > div { padding: 2.5rem 1.5rem 2rem; }
-    div[data-testid="stColumn"]:has(.login-marca) [data-testid="stImage"] img { width: 78% !important; }
-    div[data-testid="stColumn"]:has(.login-acceso) > div { padding: 2rem 1rem; }
+    .login-logo { padding-top: 32px; }
+    .st-key-login_zona { padding: 80px 0 50px; background-size: 140% auto; }
+    .st-key-login_tarjeta { padding: 0 24px 28px; }
 }
 </style>
-"""
+""".replace("MANCHA", MANCHA_LOGIN)
 
 
 @st.cache_data
@@ -168,17 +131,16 @@ def _imagen_en_base64(ruta, _modificado):
 
 
 def _estilo_fondo_login():
-    """Si hay una foto fondo_login.*, se pone detrás del logo con una capa clara encima."""
+    """Si hay una foto fondo_login.*, se pone de fondo del acceso con una capa clara encima."""
     if not FONDO_LOGIN:
         return ""
     imagen = _imagen_en_base64(FONDO_LOGIN, os.path.getmtime(FONDO_LOGIN))
     return f"""
 <style>
-div[data-testid="stColumn"]:has(.login-marca) {{
+html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {{
     background:
-        linear-gradient(160deg, rgba(234, 242, 253, 0.80) 0%,
-                        rgba(227, 236, 251, 0.74) 55%, rgba(236, 230, 250, 0.80) 100%),
-        url("{imagen}") center / cover no-repeat;
+        linear-gradient(160deg, rgba(247, 249, 253, 0.86) 0%, rgba(240, 244, 252, 0.82) 100%),
+        url("{imagen}") center / cover no-repeat fixed !important;
 }}
 </style>
 """
@@ -188,40 +150,44 @@ def pantalla_login():
     from auth import iniciar_sesion
 
     st.markdown(ESTILO_LOGIN + _estilo_fondo_login(), unsafe_allow_html=True)
-    marca, acceso = st.columns(2)
+    if os.path.exists(LOGO):
+        st.markdown(f'<div class="login-logo"><img src="{_imagen_en_base64(LOGO, os.path.getmtime(LOGO))}" '
+                    'alt="SICOR"></div>', unsafe_allow_html=True)
 
-    with marca:
-        st.markdown('<div class="login-marca"></div>', unsafe_allow_html=True)
-        if os.path.exists(LOGO):
-            st.image(LOGO, use_container_width=True)
-
-    with acceso:
-        st.markdown(
-            '<div class="login-acceso"><h3>Bienvenido de nuevo</h3>'
-            '<p>Ingresa con tus credenciales para continuar</p></div>',
-            unsafe_allow_html=True,
-        )
-        _, centro, _ = st.columns([0.12, 0.76, 0.12])
-        with centro:
-            with st.form("login"):
-                email = st.text_input("Correo")
-                password = st.text_input("Contraseña", type="password")
-                entrar = st.form_submit_button("Ingresar", type="primary",
-                                               use_container_width=True)
+    with st.container(key="login_zona"):
+        with st.container(key="login_tarjeta"):
+            st.markdown(
+                '<div class="login-icono"><svg viewBox="0 0 24 24" width="38" height="38" fill="none" '
+                'stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+                '<rect x="4.5" y="10.5" width="15" height="10" rx="2" fill="rgba(255,255,255,.18)"/>'
+                '<path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>'
+                '<circle cx="12" cy="15.5" r="1.4" fill="#FFFFFF" stroke="none"/></svg></div>'
+                '<div class="login-titulo">Inicia sesión y accede a la<br>historia clínica</div>',
+                unsafe_allow_html=True,
+            )
+            with st.form("login", border=False):
+                email = st.text_input("Correo", placeholder="Correo electrónico",
+                                      label_visibility="collapsed")
+                password = st.text_input("Contraseña", type="password", placeholder="Contraseña",
+                                         label_visibility="collapsed")
+                entrar = st.form_submit_button("Ingresar", type="primary", use_container_width=True)
             if entrar:
-                try:
-                    respuesta = iniciar_sesion(email.strip(), password)
-                    st.session_state["usuario"] = respuesta.user.email
-                    st.rerun()
-                except Exception as e:
-                    st.error(str(e))
-        st.markdown(
-            '<div class="login-pie"><p><b>SICOR</b> · Sistema de Información Clínica '
-            'para Pacientes de Ortodoncia y Ortopedia Maxilar<br>'
-            'Acceso protegido mediante autenticación segura.</p>'
-            '<p class="firma">Powered by <b>JAJEROHE Systems</b></p></div>',
-            unsafe_allow_html=True,
-        )
+                if not email.strip() or not password:
+                    st.warning("⚠️ Debe ingresar el correo electrónico y la contraseña.")
+                else:
+                    try:
+                        respuesta = iniciar_sesion(email.strip(), password)
+                        st.session_state["usuario"] = respuesta.user.email
+                        st.rerun()
+                    except Exception as e:
+                        st.error(str(e))
+
+    st.markdown(
+        '<div class="login-pie"><b>SICOR</b> · Sistema de Información Clínica '
+        'para Pacientes de Ortodoncia y Ortopedia Maxilar<br>'
+        'Powered by <b>JAJEROHE Systems</b></div>',
+        unsafe_allow_html=True,
+    )
 
 
 def usuario_actual():
@@ -255,74 +221,198 @@ def pagina_imprimir(historia, paciente, usuario):
         )
 
 
-def barra_lateral(usuario):
-    with st.sidebar:
-        if os.path.exists(LOGO):
-            st.image(LOGO)
-        st.caption(f"👤 {usuario}")
+ALTO_BARRA = 56
 
-        paciente = historia = None
-        if st.session_state.get("paciente_id"):
-            paciente = repo.obtener_paciente(st.session_state["paciente_id"])
-        if paciente and st.session_state.get("historia_id"):
-            historia = repo.obtener_historia(st.session_state["historia_id"])
-            if historia and historia["paciente_id"] != paciente["id"]:
-                historia = None
 
-        if paciente:
-            edad = calcular_edad(paciente["fecha_nacimiento"])
-            st.markdown(f"**{nombre_completo(paciente)}**  \n"
-                        f"{paciente['tipo_documento']} {paciente['documento']}"
-                        + (f" · {edad} años" if edad is not None else ""))
-            if historia:
-                st.caption(f"Historia #{historia['id']} · {historia['estado']}")
-
-        st.divider()
-        if st.button("Cerrar sesión"):
-            from auth import cerrar_sesion
-
-            cerrar_sesion()
-            st.session_state.clear()
-            st.rerun()
-
+def paciente_e_historia():
+    """Paciente e historia abiertos (los que están en la sesión)."""
+    paciente = historia = None
+    if st.session_state.get("paciente_id"):
+        paciente = repo.obtener_paciente(st.session_state["paciente_id"])
+    if paciente and st.session_state.get("historia_id"):
+        historia = repo.obtener_historia(st.session_state["historia_id"])
+        if historia and historia["paciente_id"] != paciente["id"]:
+            historia = None
     return paciente, historia
 
 
-def menu_superior(paciente, historia):
-    """
-    Menú en la parte superior de cada pantalla. En celular la barra lateral
-    queda oculta, así que el menú y el paciente abierto deben verse aquí.
-    """
-    if paciente:
-        texto = f"**{nombre_completo(paciente)}** · {paciente['documento']}"
-        if historia:
-            texto += f" · Historia #{historia['id']} ({historia['estado'].lower()})"
-        st.caption(texto)
+def barra_superior(usuario, menu_colapsado):
+    """Barra fija a todo el ancho y estilos de la ventana (menú lateral fijo
+    debajo de la barra, contraíble a una franja de íconos)."""
+    ancho = 64 if menu_colapsado else 240
+    st.markdown(f"""
+<style>
+.hc-barra{{position:fixed;top:0;left:0;right:0;height:{ALTO_BARRA}px;z-index:1000003;display:flex;align-items:center;
+  background:linear-gradient(90deg,#0B2A6F 0%,#1F4FB8 50%,#5B4FE0 100%);box-shadow:inset 0 -3px 0 #8E3FD1,0 2px 8px rgba(11,42,111,.2)}}
+.hc-barra-logo{{width:240px;height:100%;flex:0 0 240px;background:#fff;display:flex;align-items:center;justify-content:center;
+  border-bottom:3px solid #8E3FD1;box-sizing:border-box}}
+.hc-barra-logo img{{height:38px;width:auto}}
+.hc-barra-nombre{{color:#fff;font-size:16px;font-weight:800;letter-spacing:.2px;padding-left:22px;white-space:nowrap}}
+.hc-barra-nombre span{{display:block;color:#cfdcfa;font-size:10px;font-weight:600;margin-top:1px}}
+.hc-barra-acciones{{margin-left:auto;display:flex;align-items:center;gap:12px;padding-right:18px}}
+.hc-usuario{{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:20px;
+  padding:7px 12px;font-size:11px;font-weight:700}}
+.hc-salir{{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.14);text-decoration:none!important}}
+.hc-salir:hover{{background:rgba(255,255,255,.26)}}
+section[data-testid="stSidebar"],section[data-testid="stSidebar"][aria-expanded]{{position:fixed!important;top:{ALTO_BARRA}px!important;left:0!important;
+  height:calc(100vh - {ALTO_BARRA}px)!important;width:{ancho}px!important;min-width:{ancho}px!important;max-width:{ancho}px!important;
+  transform:none!important;visibility:visible!important;z-index:1000002!important;background:#F3F6FC!important;border-right:1px solid #DCE5F5!important;
+  box-shadow:none!important}}
+section[data-testid="stSidebar"]>div{{padding:.5rem .55rem 1rem!important}}
+[data-testid="stSidebarHeader"],[data-testid="stSidebarCollapseButton"],[data-testid="stExpandSidebarButton"],
+[data-testid="stSidebarResizeHandle"]{{display:none!important}}
+[data-testid="stSidebarUserContent"]{{padding:0!important}}
+[data-testid="stSidebarUserContent"] div[data-testid="stElementContainer"]:has(style){{display:none}}
+header[data-testid="stHeader"]{{display:none!important}}
+[data-testid="stMain"]{{margin-left:{ancho}px!important;width:calc(100% - {ancho}px)!important;max-width:calc(100% - {ancho}px)!important}}
+.block-container{{padding-top:{ALTO_BARRA + 18}px!important}}
+.st-key-menu_toggle{{display:flex;justify-content:{'center' if menu_colapsado else 'flex-end'}}}
+.st-key-menu_toggle div[data-testid="stButton"]>button{{width:34px!important;height:30px!important;min-height:30px!important;padding:0!important;
+  border:1px solid #cdd8ee!important;border-radius:5px!important;background:#fff!important;color:#0B2A6F!important}}
+/* Opciones del menú */
+[class*="st-key-hc_menu"]{{gap:3px!important}}
+[class*="st-key-hc_menu"] div[data-testid="stButton"]>button{{justify-content:flex-start!important;min-height:38px!important;padding:9px!important;
+  border:none!important;border-radius:7px!important;background:transparent!important;color:#2b3a5c!important;box-shadow:none!important}}
+[class*="st-key-hc_menu"] div[data-testid="stButton"]>button:hover{{background:#e6edfa!important}}
+[class*="st-key-hc_menu"] div[data-testid="stButton"]>button[kind="primary"]{{color:#fff!important;
+  background:linear-gradient(90deg,#1F6FE0 0%,#5B4FE0 55%,#8E3FD1 100%)!important}}
+[class*="st-key-hc_menu"] div[data-testid="stButton"]>button>div{{justify-content:flex-start!important;width:100%!important}}
+[class*="st-key-hc_menu"] div[data-testid="stButton"]>button p{{font-size:13px!important;font-weight:600!important;text-align:left!important}}
+[class*="st-key-hc_menu"] div[data-testid="stButton"]>button span[data-testid="stIconMaterial"]{{font-size:19px!important}}
+.hc-menu-seccion{{color:#7A86A3;font-size:10px;font-weight:800;text-transform:uppercase;margin:16px 9px 6px;letter-spacing:.6px}}
+.hc-paciente{{color:#5A6785;font-size:13px;margin:-4px 0 10px}}
+/* Franja contraída: un ícono por grupo que abre su panel a la derecha */
+[class*="st-key-grupo_"]{{display:flex;justify-content:center;margin-top:6px}}
+[class*="st-key-grupo_"] [data-testid="stPopover"],[class*="st-key-grupo_"] [data-testid="stPopover"]>div{{width:44px!important}}
+[class*="st-key-grupo_"] button{{width:44px!important;height:42px!important;min-height:42px!important;padding:0!important;
+  border:none!important;border-radius:7px!important;background:transparent!important;color:#2b3a5c!important;box-shadow:none!important}}
+[class*="st-key-grupo_"] button:hover{{background:#e6edfa!important}}
+[class*="st-key-grupo_"] button[kind="primary"]{{background:linear-gradient(90deg,#1F6FE0,#5B4FE0)!important;color:#fff!important}}
+[class*="st-key-grupo_"] button span[data-testid="stIconMaterial"]{{font-size:23px!important;margin:0!important}}
+[class*="st-key-grupo_"] button div[aria-hidden="true"]{{display:none!important}}
+[data-testid="stPopoverBody"]:has(.hc-panel-titulo){{margin-left:51px!important;margin-top:-46px!important;
+  min-width:250px;border:1px solid #DCE5F5;box-shadow:4px 6px 18px rgba(11,42,111,.16)!important}}
+.hc-panel-titulo{{color:#0B2A6F;font-size:14px;font-weight:800;padding:2px 2px 8px;margin-bottom:4px;border-bottom:1px solid #e3e9f5}}
+@media(max-width:900px){{.hc-barra-nombre span,.hc-usuario{{display:none}}}}
+@media(max-width:640px){{.hc-barra-logo{{width:130px;flex-basis:130px}}.hc-barra-logo img{{height:26px}}.hc-barra-nombre{{display:none}}}}
+</style>
+""", unsafe_allow_html=True)
+    if menu_colapsado:
+        # Al elegir una opción del panel, se cierra el panel.
+        st.html("""
+<script>
+(() => {
+    if (window.hcPanelMenu) return;
+    window.hcPanelMenu = true;
+    document.addEventListener("click", (e) => {
+        if (!e.target.closest('[data-testid="stPopoverBody"] [class*="st-key-hc_menu"] button')) return;
+        setTimeout(() => {
+            const abierto = document.querySelector('[class*="st-key-grupo_"] button[aria-expanded="true"]');
+            if (abierto) abierto.click();
+        }, 120);
+    }, true);
+})();
+</script>
+""", unsafe_allow_javascript=True)
 
+    logo = (f'<img src="{_imagen_en_base64(LOGO, os.path.getmtime(LOGO))}" alt="SICOR">'
+            if os.path.exists(LOGO) else "<b>SICOR</b>")
+    st.markdown(f"""
+<div class="hc-barra">
+  <div class="hc-barra-logo">{logo}</div>
+  <div class="hc-barra-nombre">SICOR<span>Historia Clínica de Ortodoncia y Ortopedia Maxilar</span></div>
+  <div class="hc-barra-acciones">
+    <div class="hc-usuario">👤 {html.escape(usuario)}</div>
+    <a class="hc-salir" href="?logout=1" target="_self" title="Cerrar sesión" aria-label="Cerrar sesión"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h3a1 1 0 0 1 1 1v3M18 16v3a1 1 0 0 1-1 1h-3"/><path d="M5 4.5 11 3a1 1 0 0 1 1.2 1v16a1 1 0 0 1-1.2 1L5 19.5z" fill="#fff"/><path d="M14.5 12H22M19 9l3 3-3 3"/></svg></a>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+
+def pagina_actual(historia):
+    """Página a mostrar: Pacientes o, con una historia abierta, sus secciones."""
     opciones = ["Pacientes"] + (list(PAGINAS_HISTORIA) if historia else [])
     if "ir_a" in st.session_state:
         st.session_state["pagina"] = st.session_state.pop("ir_a")
     if st.session_state.get("pagina") not in opciones:
-        st.session_state["pagina"] = st.session_state.get("ultima_pagina", "Pacientes")
-        if st.session_state["pagina"] not in opciones:
-            st.session_state["pagina"] = "Pacientes"
+        st.session_state["pagina"] = "Pacientes"
+    return st.session_state["pagina"]
 
-    pagina = st.pills("Menú", opciones, key="pagina", label_visibility="collapsed",
-                      format_func=lambda o: f"{ICONOS[o]} {o}")
-    # Al tocar la opción ya seleccionada, st.pills la deselecciona: se mantiene la anterior.
-    pagina = pagina or st.session_state.get("ultima_pagina", "Pacientes")
-    st.session_state["ultima_pagina"] = pagina
-    return pagina
+
+def _clave(texto):
+    """'Evolución' -> 'evolucion' (clave de widget sin tildes ni espacios)."""
+    texto = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", "_", texto.lower()).strip("_")
+
+
+def menu_lateral(pagina, historia, menu_colapsado):
+    """Menú lateral: completo, o franja de íconos por grupo con panel flotante."""
+    with st.sidebar:
+        with st.container(key="menu_toggle"):
+            if st.button("", key="btn_menu_toggle",
+                         icon=(":material/keyboard_double_arrow_right:" if menu_colapsado
+                               else ":material/keyboard_double_arrow_left:"),
+                         help="Expandir menú" if menu_colapsado else "Contraer menú"):
+                st.session_state["menu_colapsado"] = not menu_colapsado
+                st.rerun()
+
+        def opciones_menu(clave_menu, opciones):
+            with st.container(key=clave_menu):
+                for opcion in opciones:
+                    if st.button(opcion, icon=ICONOS[opcion], key=f"menu_{_clave(opcion)}",
+                                 type="primary" if pagina == opcion else "secondary", width="stretch"):
+                        st.session_state["pagina"] = opcion
+                        st.rerun()
+
+        grupos = [("pacientes", "Pacientes", ICONOS["Pacientes"], "hc_menu_pacientes", ["Pacientes"])]
+        if historia:
+            grupos.append(("historia", "Historia clínica", ICONOS["Historia clínica"], "hc_menu_historia",
+                           list(PAGINAS_HISTORIA)))
+        for clave, titulo, icono, clave_menu, opciones in grupos:
+            if menu_colapsado:
+                with st.popover("", icon=icono, help=titulo, key=f"grupo_{clave}",
+                                type="primary" if pagina in opciones else "secondary"):
+                    st.markdown(f'<div class="hc-panel-titulo">{titulo}</div>', unsafe_allow_html=True)
+                    opciones_menu(clave_menu, opciones)
+            else:
+                st.markdown(f'<div class="hc-menu-seccion">{titulo}</div>', unsafe_allow_html=True)
+                opciones_menu(clave_menu, opciones)
+
+
+def encabezado_paciente(paciente, historia):
+    """Paciente e historia abiertos, arriba del contenido."""
+    if not paciente:
+        return
+    texto = f"**{nombre_completo(paciente)}** · {paciente['tipo_documento']} {paciente['documento']}"
+    edad = calcular_edad(paciente["fecha_nacimiento"])
+    if edad is not None:
+        texto += f" · {edad} años"
+    if historia:
+        texto += f" · Historia #{historia['id']} ({historia['estado'].lower()})"
+    st.caption(texto)
 
 
 def main():
+    # El botón de cerrar sesión de la barra superior es un enlace a ?logout=1.
+    if st.query_params.get("logout"):
+        from auth import cerrar_sesion
+
+        cerrar_sesion()
+        st.session_state.clear()
+        st.query_params.clear()
+
     usuario = usuario_actual()
     if not usuario:
         pantalla_login()
         return
 
-    paciente, historia = barra_lateral(usuario)
-    pagina = menu_superior(paciente, historia)
+    menu_colapsado = st.session_state.get("menu_colapsado", False)
+    barra_superior(usuario, menu_colapsado)
+    paciente, historia = paciente_e_historia()
+    pagina = pagina_actual(historia)
+    menu_lateral(pagina, historia, menu_colapsado)
+    encabezado_paciente(paciente, historia)
 
     # El PDF generado pertenece a una historia; se descarta al cambiar.
     if st.session_state.get("pdf_historia") != st.session_state.get("historia_id"):
