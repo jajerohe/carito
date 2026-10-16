@@ -309,7 +309,14 @@ section[data-testid="stSidebar"]>div{{padding:.5rem .55rem 1rem!important}}
 [data-testid="stSidebarUserContent"] div[data-testid="stElementContainer"]:has(style){{display:none}}
 header[data-testid="stHeader"]{{display:none!important}}
 [data-testid="stMain"]{{margin-left:{ancho}px!important;width:calc(100% - {ancho}px)!important;max-width:calc(100% - {ancho}px)!important}}
-.block-container{{padding-top:{ALTO_BARRA + 18}px!important}}
+.block-container{{padding:{ALTO_BARRA + 18}px 1.45rem 2rem!important;max-width:100%!important}}
+/* Mismo marco de página de Podex y Ponycash: fondo gris claro y título de 19 px con línea debajo */
+html,body,[data-testid="stAppViewContainer"],[data-testid="stMain"]{{background:#F4F6FA!important}}
+[data-testid="stMain"] [data-testid="stHeading"] h2{{color:#0B2A6F!important;font-size:19px!important;font-weight:800!important;
+  padding:0 0 8px!important;margin:0 0 12px!important;border-bottom:1px solid #D5DEEF;line-height:1.35!important}}
+[data-testid="stMain"] [data-testid="stHeading"] h2 [data-testid="stHeaderActionElements"]{{display:none!important}}
+div[data-testid="stVerticalBlockBorderWrapper"]{{border-color:#DCE5F5!important;border-radius:8px!important;background:#fff!important}}
+@media(max-width:900px){{.block-container{{padding-left:.75rem!important;padding-right:.75rem!important}}}}
 .st-key-menu_toggle{{display:flex;justify-content:{'center' if menu_colapsado else 'flex-end'}}}
 .st-key-menu_toggle div[data-testid="stButton"]>button{{width:34px!important;height:30px!important;min-height:30px!important;padding:0!important;
   border:1px solid #cdd8ee!important;border-radius:5px!important;background:#fff!important;color:#0B2A6F!important}}
