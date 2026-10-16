@@ -99,10 +99,10 @@ CREATE INDEX IF NOT EXISTS idx_pagos_historia
     ON public.pagos (historia_id, fecha);
 
 -- ------------------------------------------------------------
--- Usuarios que pueden ingresar. La contraseña va cifrada con
--- bcrypt (pgcrypto). Crear uno:
---   INSERT INTO public.usuarios (email, nombre, clave)
---   VALUES ('correo@dominio.com', 'Nombre', crypt('Contraseña', gen_salt('bf')));
+-- Usuarios que pueden ingresar. Se administran en la app
+-- (Administración → Usuarios). La contraseña va cifrada con
+-- bcrypt (pgcrypto). Perfiles: Administrador (también administra
+-- los usuarios) y Usuario.
 -- ------------------------------------------------------------
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
@@ -115,6 +115,22 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
     ultimo_ingreso  TIMESTAMPTZ
 );
 CREATE UNIQUE INDEX IF NOT EXISTS usuarios_email_minusculas ON public.usuarios (lower(email));
+
+-- Código de usuario, perfil y última modificación (bases creadas antes
+-- del módulo de usuarios: se agregan sin perder datos).
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS usuario     TEXT;
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS perfil      TEXT NOT NULL DEFAULT 'Usuario';
+ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS actualizado TIMESTAMPTZ;
+UPDATE public.usuarios
+   SET usuario = upper(regexp_replace(split_part(email, '@', 1), '[^A-Za-z0-9_.-]', '', 'g'))
+ WHERE usuario IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS usuarios_usuario ON public.usuarios (usuario);
+ALTER TABLE public.usuarios DROP CONSTRAINT IF EXISTS usuarios_perfil;
+ALTER TABLE public.usuarios ADD CONSTRAINT usuarios_perfil CHECK (perfil IN ('Administrador', 'Usuario'));
+-- Siempre debe haber un administrador: si no hay ninguno, lo es el usuario más antiguo.
+UPDATE public.usuarios SET perfil = 'Administrador'
+ WHERE email = (SELECT email FROM public.usuarios ORDER BY creado LIMIT 1)
+   AND NOT EXISTS (SELECT 1 FROM public.usuarios WHERE perfil = 'Administrador');
 
 -- ------------------------------------------------------------
 -- Seguridad

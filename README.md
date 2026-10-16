@@ -28,15 +28,12 @@ Para tenerla como un ícono más en la pantalla de inicio:
 
 1. **Base de datos.** En Neon (proyecto *carito*), abrir *SQL Editor* y
    ejecutar `sql/schema.sql`.
-2. **Usuarios.** Cada persona que usará la app se crea en la tabla
-   `usuarios` (la contraseña queda cifrada con bcrypt):
-
-   ```sql
-   INSERT INTO public.usuarios (email, nombre, clave)
-   VALUES ('correo@dominio.com', 'Nombre', crypt('Contraseña', gen_salt('bf')));
-   ```
-
-   Para desactivar a alguien: `UPDATE public.usuarios SET activo = false WHERE email = '...';`
+2. **Usuarios.** Se administran en la app, en *Administración → Usuarios*
+   (solo perfil Administrador), igual que en Podex y Ponycash: crear, editar,
+   cambiar contraseña, activar/desactivar y eliminar. Cada persona cambia su
+   contraseña en *Administración → Mi cuenta*. Las contraseñas quedan cifradas
+   con bcrypt. Al crear un usuario se puede revisar y enviar el correo de
+   bienvenida, si está configurada la sección `[email]` de los secretos.
 3. **Credenciales.** Copiar `.streamlit/secrets.toml.example` como
    `.streamlit/secrets.toml` y completar los datos (o pegarlos en *Secrets* de
    Streamlit Cloud).
