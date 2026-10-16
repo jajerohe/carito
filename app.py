@@ -9,12 +9,14 @@ import streamlit as st
 
 import repositorio as repo
 from database import ErrorConexion
+from envios import mostrar_envio_pendiente
 from marca import DESCRIPCION_SISTEMA, NOMBRE_SISTEMA, TITULO_PESTANA, fijar_titulo_pestana
 from pdf import PARTES, generar_pdf
 from utilidades import FONDO_LOGIN, LOGO, calcular_edad, nombre_completo
 from vistas.historia import pagina_consentimiento, pagina_historia, pagina_ortodoncia
 from vistas.pacientes import pagina_pacientes
 from vistas.seguimiento import pagina_evolucion, pagina_pagos
+from usuarios import datos_sesion, mostrar_mi_cuenta, mostrar_modulo_usuarios
 
 st.set_page_config(page_title=TITULO_PESTANA, page_icon="🦷",
                    layout="wide", initial_sidebar_state="expanded")
@@ -32,6 +34,42 @@ button[kind="primary"], button[kind="primaryFormSubmit"] {
 button[kind="primary"]:hover, button[kind="primaryFormSubmit"]:hover {
     filter: brightness(1.07);
 }
+/* Ventanas, fichas y botones de acción (mismo manejo de Podex y Ponycash) */
+.hc-topbar{background:#fff;border:1px solid #DCE5F5;border-radius:8px;min-height:64px;padding:9px 16px;display:flex;
+  align-items:center;justify-content:space-between;box-shadow:inset 0 4px 0 #5B4FE0;margin-bottom:12px}
+.hc-top-title{color:#0B2A6F;font-size:18px;font-weight:800}
+.hc-top-subtitle{color:#5A6785;font-size:10px;margin-top:2px}
+.hc-dialog-header{margin:-6px 0 14px!important}
+.hc-section-title{color:#0B2A6F;font-size:15px;font-weight:800;margin:2px 0 5px}
+.hc-section-caption{color:#5A6785;font-size:11px;margin-bottom:8px}
+.hc-dialog-section{margin-top:14px!important}
+.hc-ficha{display:grid;gap:12px 22px;background:#fff;border:1px solid #DCE5F5;border-radius:8px;padding:14px 16px;margin:6px 0;
+  box-shadow:0 2px 7px rgba(11,42,111,.04)}
+.hc-ficha-label{color:#5B4FE0;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px}
+.hc-ficha-valor{color:#1B2540;font-size:13px;margin-top:3px;line-height:1.35;word-break:break-word;font-weight:600}
+div[role="dialog"] div[data-testid="stForm"]{border-color:#DCE5F5!important;border-radius:8px!important;background:#fff!important}
+/* Botones circulares (contenedores "acciones_*"); el color sale de la key:
+   btn_ok_, btn_info_, btn_warn_, btn_neutral_, btn_cancel_, btn_danger_. */
+[class*="st-key-acciones_"] div[data-testid="stButton"] button,[class*="st-key-acciones_"] div[data-testid="stFormSubmitButton"] button{
+  width:40px!important;height:40px!important;min-height:40px!important;padding:0!important;border-radius:50%!important;border:none!important;
+  background:linear-gradient(160deg,#5B4FE0,#0B2A6F)!important;box-shadow:0 2px 6px rgba(11,42,111,.25)!important;transition:transform .15s,box-shadow .15s}
+[class*="st-key-acciones_"] div[data-testid="stButton"] button:hover,[class*="st-key-acciones_"] div[data-testid="stFormSubmitButton"] button:hover{
+  transform:scale(1.08);box-shadow:0 3px 10px rgba(11,42,111,.35)!important;filter:none}
+[class*="st-key-acciones_"] div[data-testid="stButton"] button:disabled,[class*="st-key-acciones_"] div[data-testid="stFormSubmitButton"] button:disabled{
+  opacity:.35;transform:none;box-shadow:none!important}
+[class*="st-key-acciones_"] div[data-testid="stButton"] button span,[class*="st-key-acciones_"] div[data-testid="stFormSubmitButton"] button span{
+  color:#fff!important;font-size:20px!important;margin:0!important}
+.st-key-btn_usr_nuevo div[data-testid="stButton"] button,[class*="st-key-btn_ok_"] div[data-testid="stFormSubmitButton"] button,
+[class*="st-key-btn_ok_"] div[data-testid="stButton"] button{background:linear-gradient(160deg,#4cd3a8,#0f8a6a)!important}
+.st-key-btn_usr_editar div[data-testid="stButton"] button,[class*="st-key-btn_info_"] div[data-testid="stFormSubmitButton"] button,
+[class*="st-key-btn_info_"] div[data-testid="stButton"] button{background:linear-gradient(160deg,#4fb6f0,#1F6FE0)!important}
+.st-key-btn_usr_estado div[data-testid="stButton"] button,[class*="st-key-btn_warn_"] div[data-testid="stFormSubmitButton"] button,
+[class*="st-key-btn_warn_"] div[data-testid="stButton"] button{background:linear-gradient(160deg,#ffc629,#f08a1c)!important}
+.st-key-btn_usr_clave div[data-testid="stButton"] button,[class*="st-key-btn_neutral_"] div[data-testid="stFormSubmitButton"] button,
+[class*="st-key-btn_cancel_"] div[data-testid="stFormSubmitButton"] button,[class*="st-key-btn_cancel_"] div[data-testid="stButton"] button{
+  background:linear-gradient(160deg,#C3C9D6,#3c4459)!important}
+.st-key-btn_usr_eliminar div[data-testid="stButton"] button,[class*="st-key-btn_danger_"] div[data-testid="stFormSubmitButton"] button,
+[class*="st-key-btn_danger_"] div[data-testid="stButton"] button{background:linear-gradient(160deg,#e5533d,#8e1c1c)!important}
 /* Los bloques que solo traen estilos o scripts no deben ocupar espacio */
 [data-testid="stMainBlockContainer"] div[data-testid="stElementContainer"]:has(style),
 [data-testid="stMainBlockContainer"] div[data-testid="stElementContainer"]:has(script) { display: none; }
@@ -57,7 +95,9 @@ ICONOS = {
     "Anexo de ortodoncia": ":material/dentistry:", "Presupuesto y pagos": ":material/payments:",
     "Consentimiento": ":material/draw:", "Evolución": ":material/event_note:",
     "Imprimir": ":material/print:",
+    "Usuarios": ":material/group:", "Mi cuenta": ":material/key:", "Administración": ":material/admin_panel_settings:",
 }
+PAGINAS_ADMINISTRACION = ["Usuarios", "Mi cuenta"]
 
 
 # ============================================================
@@ -239,7 +279,7 @@ def paciente_e_historia():
     return paciente, historia
 
 
-def barra_superior(usuario, menu_colapsado):
+def barra_superior(usuario, menu_colapsado, sesion=None):
     """Barra fija a todo el ancho y estilos de la ventana (menú lateral fijo
     debajo de la barra, contraíble a una franja de íconos)."""
     ancho = 64 if menu_colapsado else 240
@@ -326,16 +366,21 @@ header[data-testid="stHeader"]{{display:none!important}}
   <div class="hc-barra-logo">{logo}</div>
   <div class="hc-barra-nombre">{html.escape(NOMBRE_SISTEMA)}<span>Historia Clínica de Ortodoncia y Ortopedia Maxilar</span></div>
   <div class="hc-barra-acciones">
-    <div class="hc-usuario">👤 {html.escape(usuario)}</div>
+    <div class="hc-usuario">👤 {html.escape(f"{sesion['nombre'] or usuario} · Usuario: {sesion['usuario']} · Perfil: {sesion['perfil']}" if sesion else usuario)}</div>
     <a class="hc-salir" href="?logout=1" target="_self" title="Cerrar sesión" aria-label="Cerrar sesión"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h3a1 1 0 0 1 1 1v3M18 16v3a1 1 0 0 1-1 1h-3"/><path d="M5 4.5 11 3a1 1 0 0 1 1.2 1v16a1 1 0 0 1-1.2 1L5 19.5z" fill="#fff"/><path d="M14.5 12H22M19 9l3 3-3 3"/></svg></a>
   </div>
 </div>
 """, unsafe_allow_html=True)
 
 
-def pagina_actual(historia):
-    """Página a mostrar: Pacientes o, con una historia abierta, sus secciones."""
-    opciones = ["Pacientes"] + (list(PAGINAS_HISTORIA) if historia else [])
+def paginas_administracion(es_administrador):
+    return PAGINAS_ADMINISTRACION if es_administrador else ["Mi cuenta"]
+
+
+def pagina_actual(historia, es_administrador):
+    """Página a mostrar: Pacientes, las secciones de la historia abierta o Administración."""
+    opciones = (["Pacientes"] + (list(PAGINAS_HISTORIA) if historia else [])
+                + paginas_administracion(es_administrador))
     if "ir_a" in st.session_state:
         st.session_state["pagina"] = st.session_state.pop("ir_a")
     if st.session_state.get("pagina") not in opciones:
@@ -349,7 +394,7 @@ def _clave(texto):
     return re.sub(r"[^a-z0-9]+", "_", texto.lower()).strip("_")
 
 
-def menu_lateral(pagina, historia, menu_colapsado):
+def menu_lateral(pagina, historia, menu_colapsado, es_administrador):
     """Menú lateral: completo, o franja de íconos por grupo con panel flotante."""
     with st.sidebar:
         with st.container(key="menu_toggle"):
@@ -372,6 +417,8 @@ def menu_lateral(pagina, historia, menu_colapsado):
         if historia:
             grupos.append(("historia", "Historia clínica", ICONOS["Historia clínica"], "hc_menu_historia",
                            list(PAGINAS_HISTORIA)))
+        grupos.append(("admin", "Administración", ICONOS["Administración"], "hc_menu_admin",
+                       paginas_administracion(es_administrador)))
         for clave, titulo, icono, clave_menu, opciones in grupos:
             if menu_colapsado:
                 with st.popover("", icon=icono, help=titulo, key=f"grupo_{clave}",
@@ -410,11 +457,27 @@ def main():
         pantalla_login()
         return
 
+    # Si el usuario fue desactivado o eliminado, la sesión se cierra.
+    sesion = None if os.environ.get("DEV_SIN_LOGIN") else datos_sesion(usuario)
+    if not os.environ.get("DEV_SIN_LOGIN") and sesion is None:
+        st.session_state.clear()
+        st.rerun()
+    es_administrador = os.environ.get("DEV_SIN_LOGIN") is not None or sesion["perfil"] == "Administrador"
+
     menu_colapsado = st.session_state.get("menu_colapsado", False)
-    barra_superior(usuario, menu_colapsado)
+    barra_superior(usuario, menu_colapsado, sesion)
     paciente, historia = paciente_e_historia()
-    pagina = pagina_actual(historia)
-    menu_lateral(pagina, historia, menu_colapsado)
+    pagina = pagina_actual(historia, es_administrador)
+    menu_lateral(pagina, historia, menu_colapsado, es_administrador)
+    # Vista previa del correo pendiente (por ejemplo, el de bienvenida) y resultado del envío.
+    mostrar_envio_pendiente()
+    if pagina in PAGINAS_ADMINISTRACION:
+        st.header("Administración de Usuarios" if pagina == "Usuarios" else "Mi cuenta")
+        if pagina == "Usuarios":
+            mostrar_modulo_usuarios(usuario)
+        else:
+            mostrar_mi_cuenta(usuario)
+        return
     encabezado_paciente(paciente, historia)
 
     # El PDF generado pertenece a una historia; se descarta al cambiar.
