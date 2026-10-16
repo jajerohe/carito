@@ -79,10 +79,14 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] { backgro
 div[data-testid="stElementContainer"]:has(style) { display: none; }
 [data-testid="stMainBlockContainer"] [data-testid="stVerticalBlock"] { gap: 0; }
 
-.login-logo { text-align: center; padding: 56px 0 0; }
+/* Logo, tarjeta y pie centrados, con los mismos espacios en todos los sistemas */
+[data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] {
+    min-height: 100vh; justify-content: center; padding: 32px 0;
+}
+.login-logo { text-align: center; padding: 0; line-height: 0; }
 .login-logo img { width: 230px; max-width: 70%; height: auto; }
 .st-key-login_zona {
-    max-width: 600px; margin: 0 auto; padding: 110px 0 80px;
+    max-width: 600px; margin: 0 auto; padding: 110px 0 96px;
     background: url("data:image/svg+xml;base64,MANCHA") center / 100% auto no-repeat;
 }
 .st-key-login_tarjeta {
@@ -112,11 +116,10 @@ div[data-testid="stElementContainer"]:has(style) { display: none; }
     border-radius: 3px !important; min-height: 36px !important; font-weight: 700 !important; margin-top: 2px;
 }
 .st-key-login_tarjeta [data-testid="stAlert"] { margin-top: 12px; }
-.login-pie { text-align: center; color: #7A86A3; font-size: 0.78rem; line-height: 1.5; padding: 0 0 28px; }
+.login-pie { text-align: center; color: #7A86A3; font-size: 0.78rem; line-height: 1.5; padding: 0; }
 .login-pie b { color: #0B2A6F; }
 @media (max-width: 640px) {
-    .login-logo { padding-top: 32px; }
-    .st-key-login_zona { padding: 80px 0 50px; background-size: 140% auto; }
+    .st-key-login_zona { padding: 90px 0 64px; background-size: 140% auto; }
     .st-key-login_tarjeta { padding: 0 24px 28px; }
 }
 </style>
