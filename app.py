@@ -165,7 +165,7 @@ def pantalla_login():
                 '<rect x="4.5" y="10.5" width="15" height="10" rx="2" fill="rgba(255,255,255,.18)"/>'
                 '<path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>'
                 '<circle cx="12" cy="15.5" r="1.4" fill="#FFFFFF" stroke="none"/></svg></div>'
-                '<div class="login-titulo">Inicia sesión y accede a la<br>historia clínica</div>',
+                '<div class="login-titulo">Inicia sesión y accede a<br>SICOR</div>',
                 unsafe_allow_html=True,
             )
             with st.form("login", border=False):
