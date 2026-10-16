@@ -9,7 +9,7 @@ entorno. Si no están definidas se usan los valores por defecto de abajo.
 import json
 import os
 
-NOMBRE_DEFECTO = "SICOR"
+NOMBRE_DEFECTO = "Carito"
 DESCRIPCION_DEFECTO = "Sistema de Información Clínica para Pacientes de Ortodoncia y Ortopedia Maxilar"
 
 

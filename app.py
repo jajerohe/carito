@@ -20,7 +20,7 @@ st.set_page_config(page_title=TITULO_PESTANA, page_icon="🦷",
                    layout="wide", initial_sidebar_state="expanded")
 fijar_titulo_pestana()
 
-# Estilo general con los colores de SICOR y ajustes para celular.
+# Estilo general con los colores de Carito y ajustes para celular.
 st.markdown("""
 <style>
 h1, h2, h3 { color: #0B2A6F; }
@@ -86,7 +86,7 @@ div[data-testid="stElementContainer"]:has(style) { display: none; }
     min-height: 100vh; justify-content: center; padding: 32px 0;
 }
 .login-logo { text-align: center; padding: 0; line-height: 0; }
-.login-logo img { width: 230px; max-width: 70%; height: auto; }
+.login-logo img { width: 150px; max-width: 50%; height: auto; }
 .st-key-login_zona {
     max-width: 600px; margin: 0 auto; padding: 110px 0 96px;
     background: url("data:image/svg+xml;base64,MANCHA") center / 100% auto no-repeat;
@@ -250,7 +250,7 @@ def barra_superior(usuario, menu_colapsado):
   background:linear-gradient(90deg,#0B2A6F 0%,#1F4FB8 50%,#5B4FE0 100%);box-shadow:inset 0 -3px 0 #8E3FD1,0 2px 8px rgba(11,42,111,.2)}}
 .hc-barra-logo{{width:240px;height:100%;flex:0 0 240px;background:#fff;display:flex;align-items:center;justify-content:center;
   border-bottom:3px solid #8E3FD1;box-sizing:border-box}}
-.hc-barra-logo img{{height:38px;width:auto}}
+.hc-barra-logo img{{height:30px;width:auto}}
 .hc-barra-nombre{{color:#fff;font-size:16px;font-weight:800;letter-spacing:.2px;padding-left:22px;white-space:nowrap}}
 .hc-barra-nombre span{{display:block;color:#cfdcfa;font-size:10px;font-weight:600;margin-top:1px}}
 .hc-barra-acciones{{margin-left:auto;display:flex;align-items:center;gap:12px;padding-right:18px}}
@@ -299,7 +299,7 @@ header[data-testid="stHeader"]{{display:none!important}}
   min-width:250px;border:1px solid #DCE5F5;box-shadow:4px 6px 18px rgba(11,42,111,.16)!important}}
 .hc-panel-titulo{{color:#0B2A6F;font-size:14px;font-weight:800;padding:2px 2px 8px;margin-bottom:4px;border-bottom:1px solid #e3e9f5}}
 @media(max-width:900px){{.hc-barra-nombre span,.hc-usuario{{display:none}}}}
-@media(max-width:640px){{.hc-barra-logo{{width:130px;flex-basis:130px}}.hc-barra-logo img{{height:26px}}.hc-barra-nombre{{display:none}}}}
+@media(max-width:640px){{.hc-barra-logo{{width:140px;flex-basis:140px}}.hc-barra-logo img{{height:24px}}.hc-barra-nombre{{display:none}}}}
 </style>
 """, unsafe_allow_html=True)
     if menu_colapsado:
