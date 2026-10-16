@@ -74,6 +74,12 @@ def guardar_paciente(datos, usuario, paciente_id=None):
         return paciente_id
 
 
+def eliminar_paciente(paciente_id):
+    """Elimina un paciente sin historias clínicas (la base de datos lo impide si tiene)."""
+    with conexion() as conn:
+        conn.execute("DELETE FROM pacientes WHERE id = %s", (paciente_id,))
+
+
 # ============================================================
 # Historias clínicas
 # ============================================================

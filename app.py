@@ -485,7 +485,11 @@ def main():
         else:
             mostrar_mi_cuenta(usuario)
         return
-    encabezado_paciente(paciente, historia)
+    # En Pacientes el paciente seleccionado ya se muestra junto a los botones.
+    if pagina != "Pacientes":
+        encabezado_paciente(paciente, historia)
+        # Al volver a Pacientes la tabla llega sin marca; no es que se haya quitado.
+        st.session_state.pop("pacientes_habia_seleccion", None)
 
     # El PDF generado pertenece a una historia; se descarta al cambiar.
     if st.session_state.get("pdf_historia") != st.session_state.get("historia_id"):

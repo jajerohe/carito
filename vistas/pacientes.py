@@ -1,4 +1,9 @@
+"""Página de pacientes con el mismo manejo de Usuarios (Podex y Ponycash):
+búsqueda, fila seleccionada, botones circulares y ventanas para crear,
+editar y eliminar. Debajo, las historias clínicas del paciente seleccionado."""
+
 from datetime import date
+from html import escape
 
 import pandas as pd
 import psycopg
@@ -6,10 +11,31 @@ import streamlit as st
 
 import repositorio as repo
 from formulario import GENEROS, TIPOS_DOCUMENTO
+from usuarios import encabezado_ventana, ficha, seccion
 from utilidades import calcular_edad, formato_fecha, nombre_completo
 
 
-def _formulario_paciente(paciente, clave):
+def _notificar(mensaje, tipo="success"):
+    st.session_state["mensaje_pacientes"] = (tipo, mensaje)
+    st.rerun()
+
+
+def _seleccionar(paciente_id):
+    if st.session_state.get("paciente_id") != paciente_id:
+        st.session_state["paciente_id"] = paciente_id
+        st.session_state.pop("historia_id", None)
+
+
+def _ficha_paciente(p):
+    ficha([("Documento", f"{p['tipo_documento']} {p['documento']}"), ("Paciente", nombre_completo(p)),
+           ("Edad", calcular_edad(p["fecha_nacimiento"]))])
+
+
+# ============================================================
+# FORMULARIO
+# ============================================================
+def _formulario_paciente(paciente, clave, boton):
+    """Formulario de datos del paciente. Devuelve los datos válidos al guardar."""
     p = paciente or {}
     with st.form(clave):
         c1, c2, c3 = st.columns([1, 2, 2])
@@ -51,7 +77,8 @@ def _formulario_paciente(paciente, clave):
             "Documento del acudiente", p.get("documento_acudiente") or "",
         )
 
-        enviar = st.form_submit_button("Guardar paciente", type="primary")
+        with st.container(key=f"acciones_dlg_{clave}", horizontal=True, horizontal_alignment="right", gap="small"):
+            enviar = st.form_submit_button("", icon=boton[0], key=boton[1], help=boton[2])
 
     if not enviar:
         return None
@@ -73,7 +100,7 @@ def _formulario_paciente(paciente, clave):
     faltantes = [n for n, k in (("documento", "documento"), ("apellidos", "apellidos"),
                                 ("nombres", "nombres")) if not datos[k]]
     if faltantes:
-        st.error("Complete los campos obligatorios: " + ", ".join(faltantes))
+        st.error("❌ Complete los campos obligatorios: " + ", ".join(faltantes) + ".")
         return None
     return datos
 
@@ -82,88 +109,213 @@ def _guardar(datos, usuario, paciente_id=None):
     try:
         return repo.guardar_paciente(datos, usuario, paciente_id)
     except psycopg.errors.UniqueViolation:
-        st.error(f"Ya existe un paciente con el documento {datos['documento']}.")
-        return None
+        st.error(f"❌ Ya existe un paciente con el documento {datos['documento']}.")
+    except Exception as e:
+        st.error(f"❌ No fue posible guardar el paciente: {e}")
+    return None
 
 
+# ============================================================
+# VENTANAS
+# ============================================================
+@st.dialog(" ", width="large")
+def ventana_crear_paciente(usuario):
+    encabezado_ventana("Nuevo Paciente")
+    datos = _formulario_paciente(None, "form_crear_paciente",
+                                 (":material/person_add:", "btn_ok_crear_paciente", "Registrar paciente"))
+    if datos:
+        nuevo_id = _guardar(datos, usuario)
+        if nuevo_id:
+            _seleccionar(nuevo_id)
+            _notificar(f"✅ Paciente {datos['apellidos']} {datos['nombres']} registrado correctamente.")
+
+
+@st.dialog(" ", width="large")
+def ventana_editar_paciente(paciente, usuario):
+    encabezado_ventana("Editar Paciente")
+    datos = _formulario_paciente(paciente, f"form_editar_paciente_{paciente['id']}",
+                                 (":material/save:", "btn_info_editar_paciente", "Guardar cambios"))
+    if datos and _guardar(datos, usuario, paciente["id"]):
+        _notificar(f"✅ Paciente {datos['apellidos']} {datos['nombres']} actualizado correctamente.")
+
+
+@st.dialog(" ", width="large")
+def ventana_eliminar_paciente(paciente, historias):
+    encabezado_ventana("Eliminar Paciente")
+    _ficha_paciente(paciente)
+    if historias:
+        seccion("No es posible eliminar este paciente",
+                f"Tiene {historias} historia(s) clínica(s) registrada(s). "
+                "Las historias clínicas se conservan y no se pueden borrar desde aquí.")
+        return
+
+    seccion("¿Está seguro que desea eliminar este paciente?",
+            "Se eliminan sus datos personales. Esta acción no se puede deshacer.")
+    with st.form(f"form_eliminar_paciente_{paciente['id']}"):
+        with st.container(key="acciones_dlg_eliminar_paciente", horizontal=True,
+                          horizontal_alignment="right", gap="small"):
+            cancelar = st.form_submit_button("", icon=":material/close:", key="btn_cancel_eliminar_paciente",
+                                             help="Cancelar")
+            confirmar = st.form_submit_button("", icon=":material/delete:", key="btn_danger_eliminar_paciente",
+                                              help="Sí, eliminar")
+    if cancelar:
+        st.rerun()
+    if not confirmar:
+        return
+    try:
+        repo.eliminar_paciente(paciente["id"])
+    except psycopg.errors.ForeignKeyViolation:
+        st.error("❌ El paciente tiene historias clínicas; no es posible eliminarlo.")
+        return
+    except Exception as e:
+        st.error(f"❌ No fue posible eliminar el paciente: {e}")
+        return
+    st.session_state.pop("paciente_id", None)
+    st.session_state.pop("historia_id", None)
+    _notificar(f"✅ Paciente {nombre_completo(paciente)} eliminado correctamente.")
+
+
+@st.dialog(" ", width="large")
+def ventana_nueva_historia(paciente, usuario):
+    encabezado_ventana("Nueva Historia Clínica")
+    _ficha_paciente(paciente)
+    with st.form(f"form_nueva_historia_{paciente['id']}"):
+        fecha = st.date_input("Fecha de apertura", value=date.today(), format="DD/MM/YYYY")
+        motivo = st.text_area("Motivo de la consulta")
+        with st.container(key="acciones_dlg_nueva_historia", horizontal=True,
+                          horizontal_alignment="right", gap="small"):
+            crear = st.form_submit_button("", icon=":material/note_add:", key="btn_ok_nueva_historia",
+                                          help="Crear historia clínica")
+    if not crear:
+        return
+    try:
+        historia_id = repo.crear_historia(paciente["id"], fecha, motivo.strip(), usuario)
+    except Exception as e:
+        st.error(f"❌ No fue posible crear la historia clínica: {e}")
+        return
+    st.session_state["historia_id"] = historia_id
+    st.session_state["ir_a"] = "Historia clínica"
+    st.rerun()
+
+
+# ============================================================
+# PÁGINA
+# ============================================================
 def pagina_pacientes(usuario):
     st.header("Pacientes")
 
-    with st.expander("➕ Registrar paciente nuevo"):
-        datos = _formulario_paciente(None, "nuevo_paciente")
-        if datos:
-            nuevo_id = _guardar(datos, usuario)
-            if nuevo_id:
-                st.session_state["paciente_id"] = nuevo_id
-                st.session_state.pop("historia_id", None)
-                st.success("Paciente registrado.")
-                st.rerun()
+    mensaje = st.session_state.pop("mensaje_pacientes", None)
+    if mensaje:
+        tipo, texto = mensaje
+        (st.warning if tipo == "warning" else st.success)(texto)
 
-    texto = st.text_input("Buscar por nombre, apellido o documento",
-                          placeholder="Ej: PÉREZ o 1023456789")
-    resultados = repo.buscar_pacientes(texto)
-
-    if not resultados:
-        st.info("No se encontraron pacientes.")
-    else:
-        tabla = pd.DataFrame([{
-            "Documento": f"{r['tipo_documento']} {r['documento']}",
-            "Apellidos": r["apellidos"],
-            "Nombres": r["nombres"],
-            "Edad": calcular_edad(r["fecha_nacimiento"]),
-            "Celular": r["celular"],
-            "Historias": r["historias"],
-        } for r in resultados])
-        evento = st.dataframe(
-            tabla, hide_index=True, use_container_width=True,
-            on_select="rerun", selection_mode="single-row",
-        )
-        filas = evento.selection.rows
-        if filas:
-            elegido = resultados[filas[0]]["id"]
-            if st.session_state.get("paciente_id") != elegido:
-                st.session_state["paciente_id"] = elegido
-                st.session_state.pop("historia_id", None)
-                st.rerun()
-
-    paciente_id = st.session_state.get("paciente_id")
-    if paciente_id:
-        _detalle_paciente(paciente_id, usuario)
-
-
-def _detalle_paciente(paciente_id, usuario):
-    paciente = repo.obtener_paciente(paciente_id)
-    if not paciente:
-        st.session_state.pop("paciente_id", None)
+    texto = st.text_input("🔎 Buscar paciente", placeholder="Digite nombre, apellido o documento...")
+    try:
+        resultados = repo.buscar_pacientes(texto)
+    except Exception as e:
+        st.error("❌ No fue posible consultar los pacientes.")
+        st.exception(e)
         return
 
-    st.subheader(nombre_completo(paciente))
+    # La fila elegida en la tabla manda; si no hay, se conserva el paciente
+    # con el que se venía trabajando (por ejemplo, al volver de la historia).
+    seleccion = st.session_state.get("tabla_pacientes")
+    filas = seleccion.selection.rows if seleccion else []
+    if filas and filas[0] < len(resultados):
+        _seleccionar(resultados[filas[0]]["id"])
+    elif st.session_state.get("pacientes_habia_seleccion"):
+        # Se quitó la marca de la fila.
+        st.session_state.pop("paciente_id", None)
+        st.session_state.pop("historia_id", None)
+    st.session_state["pacientes_habia_seleccion"] = bool(filas)
 
-    with st.expander("✏️ Editar datos del paciente"):
-        datos = _formulario_paciente(paciente, f"editar_paciente_{paciente_id}")
-        if datos and _guardar(datos, usuario, paciente_id):
-            st.success("Datos actualizados.")
-            st.rerun()
+    paciente_id = st.session_state.get("paciente_id")
+    fila = next((r for r in resultados if r["id"] == paciente_id), None)
+    if fila is None and paciente_id:
+        fila = repo.obtener_paciente(paciente_id)
+        if fila is None:
+            st.session_state.pop("paciente_id", None)
+        else:
+            fila = {**fila, "historias": len(repo.historias_de_paciente(paciente_id))}
 
-    st.markdown("**Historias clínicas**")
-    historias = repo.historias_de_paciente(paciente_id)
-    for h in historias:
-        c1, c2, c3 = st.columns([2, 4, 1])
-        c1.write(f"{formato_fecha(h['fecha_apertura'])} · {h['estado']}")
-        c2.write(h["motivo_consulta"] or "")
-        if c3.button("Abrir", key=f"abrir_{h['id']}"):
-            st.session_state["historia_id"] = h["id"]
-            st.session_state["ir_a"] = "Historia clínica"
-            st.rerun()
+    c_sel, c_acciones = st.columns([3, 1.4], vertical_alignment="center")
+    with c_sel:
+        if fila is not None:
+            st.markdown(f"**Paciente seleccionado:** {escape(fila['tipo_documento'])} "
+                        f"{escape(fila['documento'])} · {escape(nombre_completo(fila))}")
+        else:
+            st.caption("☝️ Seleccione un paciente en la tabla para administrarlo.")
+    with c_acciones:
+        with st.container(key="acciones_pacientes", horizontal=True, horizontal_alignment="right", gap="small"):
+            if st.button("", icon=":material/person_add:", key="btn_ok_pac_nuevo", help="Nuevo paciente"):
+                ventana_crear_paciente(usuario)
+            if st.button("", icon=":material/edit:", key="btn_info_pac_editar", disabled=fila is None,
+                         help="Editar paciente"):
+                ventana_editar_paciente(fila, usuario)
+            if st.button("", icon=":material/note_add:", key="btn_neutral_pac_historia", disabled=fila is None,
+                         help="Nueva historia clínica"):
+                ventana_nueva_historia(fila, usuario)
+            if st.button("", icon=":material/delete:", key="btn_danger_pac_eliminar", disabled=fila is None,
+                         help="Eliminar paciente"):
+                ventana_eliminar_paciente(fila, fila["historias"])
 
-    with st.form(f"nueva_historia_{paciente_id}"):
-        st.markdown("**Abrir historia clínica nueva**")
-        fecha = st.date_input("Fecha de apertura", value=date.today(),
-                              format="DD/MM/YYYY")
-        motivo = st.text_area("Motivo de la consulta")
-        if st.form_submit_button("Crear historia", type="primary"):
-            st.session_state["historia_id"] = repo.crear_historia(
-                paciente_id, fecha, motivo.strip(), usuario,
-            )
-            st.session_state["ir_a"] = "Historia clínica"
-            st.rerun()
+    if not resultados:
+        st.info("ℹ️ No existen pacientes que coincidan con el criterio de búsqueda.")
+    else:
+        tabla = pd.DataFrame([{
+            "DOCUMENTO": f"{r['tipo_documento']} {r['documento']}",
+            "APELLIDOS": r["apellidos"],
+            "NOMBRES": r["nombres"],
+            "EDAD": calcular_edad(r["fecha_nacimiento"]),
+            "CELULAR": r["celular"] or "—",
+            "HISTORIAS": r["historias"],
+        } for r in resultados])
+        tabla["EDAD"] = tabla["EDAD"].map(lambda e: "—" if pd.isna(e) else str(int(e)))
+        st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
+        st.dataframe(
+            tabla, key="tabla_pacientes", on_select="rerun", selection_mode="single-row",
+            hide_index=True, width="stretch", height=min(38 + 35 * len(tabla), 640),
+        )
+
+    if fila is not None:
+        _historias_del_paciente(fila, usuario)
+
+
+def _historias_del_paciente(paciente, usuario):
+    historias = repo.historias_de_paciente(paciente["id"])
+    st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="hc-section-title">Historias clínicas de {escape(nombre_completo(paciente))}</div>',
+                unsafe_allow_html=True)
+    if not historias:
+        st.caption("Este paciente aún no tiene historias clínicas. Use el botón de nueva historia clínica.")
+        return
+
+    seleccion = st.session_state.get(f"tabla_historias_{paciente['id']}")
+    filas = seleccion.selection.rows if seleccion else []
+    historia = historias[filas[0]] if filas and filas[0] < len(historias) else None
+
+    c_sel, c_acciones = st.columns([3, 1.4], vertical_alignment="center")
+    with c_sel:
+        if historia is not None:
+            st.markdown(f"**Historia seleccionada:** {formato_fecha(historia['fecha_apertura'])} · "
+                        f"{escape(historia['estado'])}")
+        else:
+            st.caption("☝️ Seleccione una historia clínica para abrirla.")
+    with c_acciones:
+        with st.container(key="acciones_historias", horizontal=True, horizontal_alignment="right", gap="small"):
+            if st.button("", icon=":material/folder_open:", key="btn_info_hist_abrir", disabled=historia is None,
+                         help="Abrir historia clínica"):
+                st.session_state["historia_id"] = historia["id"]
+                st.session_state["ir_a"] = "Historia clínica"
+                st.rerun()
+
+    tabla = pd.DataFrame([{
+        "APERTURA": formato_fecha(h["fecha_apertura"]),
+        "ESTADO": h["estado"],
+        "MOTIVO DE CONSULTA": h["motivo_consulta"] or "—",
+    } for h in historias])
+    st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
+    st.dataframe(
+        tabla, key=f"tabla_historias_{paciente['id']}", on_select="rerun", selection_mode="single-row",
+        hide_index=True, width="stretch", height=min(38 + 35 * len(tabla), 400),
+    )
