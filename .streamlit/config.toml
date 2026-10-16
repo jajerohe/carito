@@ -1,0 +1,9 @@
+# Paleta tomada del logo de Carito: azul marino, azul, cian y violeta.
+[theme]
+primaryColor = "#2F5BD8"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#EEF3FB"
+textColor = "#1B2540"
+
+[client]
+toolbarMode = "minimal"
