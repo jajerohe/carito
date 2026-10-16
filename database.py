@@ -13,24 +13,18 @@ class ErrorConexion(Exception):
 # (texto del error de Postgres, explicación para el usuario)
 DIAGNOSTICOS = (
     ("password authentication failed",
-     "la contraseña de [database] password es incorrecta. Si no la recuerda, "
-     "cámbiela en Supabase (Project Settings → Database → Reset database "
-     "password) y actualícela en los Secrets."),
-    ("tenant or user not found",
-     "el usuario o el host no corresponden al proyecto. El usuario debe ser "
-     "postgres.<código del proyecto> y el host debe copiarse exactamente "
-     "desde Supabase → Connect → Session pooler (puede empezar por aws-0- o "
-     "aws-1-)."),
+     "el usuario o la contraseña de [database] no son correctos. Cópielos de "
+     "Neon → Connect (Connection string)."),
     ("could not translate host name",
-     "el host está mal escrito. Cópielo desde Supabase → Connect → Session pooler."),
+     "el host está mal escrito. Cópielo de Neon → Connect."),
     ("name or service not known",
-     "el host está mal escrito. Cópielo desde Supabase → Connect → Session pooler."),
-    ("network is unreachable",
-     "está usando la conexión directa (db.xxx.supabase.co). Use el host del "
-     "Session pooler (aws-...pooler.supabase.com)."),
+     "el host está mal escrito. Cópielo de Neon → Connect."),
+    ("does not exist",
+     "la base de datos indicada en [database] database no existe. Por defecto en Neon es neondb."),
+    ("ssl",
+     "la conexión requiere SSL. Agregue sslmode = \"require\" en [database]."),
     ("timeout",
-     "el servidor no respondió. Verifique que el host sea el del Session "
-     "pooler y que el proyecto de Supabase no esté pausado."),
+     "el servidor no respondió. Neon despierta la base en unos segundos; intente de nuevo."),
     ("connection refused",
      "el servidor rechazó la conexión. Verifique el host y que el puerto sea 5432."),
 )
@@ -59,6 +53,8 @@ def _parametros_conexion():
             "dbname": _limpio(db["database"]),
             "user": _limpio(db["user"]),
             "password": _limpio(db["password"]),
+            # Neon exige SSL; en una base local se puede poner "disable".
+            "sslmode": _limpio(db.get("sslmode", "require")),
         }
     except (KeyError, ValueError) as e:
         raise ErrorConexion(
