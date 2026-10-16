@@ -79,6 +79,13 @@ def conexion():
                                connect_timeout=15)
     except psycopg.OperationalError as e:
         raise ErrorConexion(_diagnosticar(e)) from e
+    except UnicodeError as e:
+        # Un host con partes vacías (por ejemplo "ep-....neon.tech") no se puede resolver.
+        raise ErrorConexion(
+            "No se pudo conectar a la base de datos: el host de [database] está incompleto o mal "
+            "escrito. Cópielo de Neon → Connect (va entre la @ y la / de la cadena de conexión)."
+            f"\n\nDetalle técnico: {e}"
+        ) from e
 
     try:
         yield conn
