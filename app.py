@@ -9,14 +9,16 @@ import streamlit as st
 
 import repositorio as repo
 from database import ErrorConexion
+from marca import DESCRIPCION_SISTEMA, NOMBRE_SISTEMA, TITULO_PESTANA, fijar_titulo_pestana
 from pdf import PARTES, generar_pdf
 from utilidades import FONDO_LOGIN, LOGO, calcular_edad, nombre_completo
 from vistas.historia import pagina_consentimiento, pagina_historia, pagina_ortodoncia
 from vistas.pacientes import pagina_pacientes
 from vistas.seguimiento import pagina_evolucion, pagina_pagos
 
-st.set_page_config(page_title="SICOR - Historia Clínica de Ortodoncia y Ortopedia Maxilar", page_icon="🦷",
+st.set_page_config(page_title=TITULO_PESTANA, page_icon="🦷",
                    layout="wide", initial_sidebar_state="expanded")
+fijar_titulo_pestana()
 
 # Estilo general con los colores de SICOR y ajustes para celular.
 st.markdown("""
@@ -155,7 +157,7 @@ def pantalla_login():
     st.markdown(ESTILO_LOGIN + _estilo_fondo_login(), unsafe_allow_html=True)
     if os.path.exists(LOGO):
         st.markdown(f'<div class="login-logo"><img src="{_imagen_en_base64(LOGO, os.path.getmtime(LOGO))}" '
-                    'alt="SICOR"></div>', unsafe_allow_html=True)
+                    f'alt="{html.escape(NOMBRE_SISTEMA)}"></div>', unsafe_allow_html=True)
 
     with st.container(key="login_zona"):
         with st.container(key="login_tarjeta"):
@@ -165,7 +167,7 @@ def pantalla_login():
                 '<rect x="4.5" y="10.5" width="15" height="10" rx="2" fill="rgba(255,255,255,.18)"/>'
                 '<path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>'
                 '<circle cx="12" cy="15.5" r="1.4" fill="#FFFFFF" stroke="none"/></svg></div>'
-                '<div class="login-titulo">Inicia sesión y accede a<br>SICOR</div>',
+                f'<div class="login-titulo">Inicia sesión y accede a<br>{html.escape(NOMBRE_SISTEMA)}</div>',
                 unsafe_allow_html=True,
             )
             with st.form("login", border=False):
@@ -186,8 +188,7 @@ def pantalla_login():
                         st.error(str(e))
 
     st.markdown(
-        '<div class="login-pie"><b>SICOR</b> · Sistema de Información Clínica '
-        'para Pacientes de Ortodoncia y Ortopedia Maxilar<br>'
+        f'<div class="login-pie"><b>{html.escape(NOMBRE_SISTEMA)}</b> · {html.escape(DESCRIPCION_SISTEMA)}<br>'
         'Powered by <b>JAJEROHE Systems</b></div>',
         unsafe_allow_html=True,
     )
@@ -319,12 +320,12 @@ header[data-testid="stHeader"]{{display:none!important}}
 </script>
 """, unsafe_allow_javascript=True)
 
-    logo = (f'<img src="{_imagen_en_base64(LOGO, os.path.getmtime(LOGO))}" alt="SICOR">'
-            if os.path.exists(LOGO) else "<b>SICOR</b>")
+    logo = (f'<img src="{_imagen_en_base64(LOGO, os.path.getmtime(LOGO))}" alt="{html.escape(NOMBRE_SISTEMA)}">'
+            if os.path.exists(LOGO) else f"<b>{html.escape(NOMBRE_SISTEMA)}</b>")
     st.markdown(f"""
 <div class="hc-barra">
   <div class="hc-barra-logo">{logo}</div>
-  <div class="hc-barra-nombre">SICOR<span>Historia Clínica de Ortodoncia y Ortopedia Maxilar</span></div>
+  <div class="hc-barra-nombre">{html.escape(NOMBRE_SISTEMA)}<span>Historia Clínica de Ortodoncia y Ortopedia Maxilar</span></div>
   <div class="hc-barra-acciones">
     <div class="hc-usuario">👤 {html.escape(usuario)}</div>
     <a class="hc-salir" href="?logout=1" target="_self" title="Cerrar sesión" aria-label="Cerrar sesión"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h3a1 1 0 0 1 1 1v3M18 16v3a1 1 0 0 1-1 1h-3"/><path d="M5 4.5 11 3a1 1 0 0 1 1.2 1v16a1 1 0 0 1-1.2 1L5 19.5z" fill="#fff"/><path d="M14.5 12H22M19 9l3 3-3 3"/></svg></a>
