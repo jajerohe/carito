@@ -1,6 +1,7 @@
 -- ============================================================
 -- Historia Clínica de Ortodoncia - esquema de base de datos
--- Ejecutar una sola vez en el SQL Editor de Supabase.
+-- Ejecutar en el SQL Editor de Neon. Se puede volver a ejecutar sin
+-- perder datos.
 -- ============================================================
 
 -- ------------------------------------------------------------
@@ -98,12 +99,31 @@ CREATE INDEX IF NOT EXISTS idx_pagos_historia
     ON public.pagos (historia_id, fecha);
 
 -- ------------------------------------------------------------
+-- Usuarios que pueden ingresar. La contraseña va cifrada con
+-- bcrypt (pgcrypto). Crear uno:
+--   INSERT INTO public.usuarios (email, nombre, clave)
+--   VALUES ('correo@dominio.com', 'Nombre', crypt('Contraseña', gen_salt('bf')));
+-- ------------------------------------------------------------
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE TABLE IF NOT EXISTS public.usuarios (
+    email           TEXT PRIMARY KEY,
+    nombre          TEXT,
+    clave           TEXT NOT NULL,
+    activo          BOOLEAN NOT NULL DEFAULT TRUE,
+    creado          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    ultimo_ingreso  TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX IF NOT EXISTS usuarios_email_minusculas ON public.usuarios (lower(email));
+
+-- ------------------------------------------------------------
 -- Seguridad
--- La aplicación se conecta con el usuario de Postgres (que no
--- está sujeto a RLS). Activar RLS SIN políticas impide que la
--- API pública de Supabase (clave anon) lea datos clínicos.
+-- La aplicación se conecta con el usuario dueño de las tablas
+-- (no sujeto a RLS). Activar RLS SIN políticas impide que otros
+-- roles o una API pública lean los datos clínicos.
 -- ------------------------------------------------------------
 ALTER TABLE public.pacientes   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.historias   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.evoluciones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pagos       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.usuarios    ENABLE ROW LEVEL SECURITY;

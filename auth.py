@@ -1,50 +1,40 @@
-import unicodedata
+"""Inicio de sesión contra la tabla public.usuarios de la propia base de datos.
 
-import streamlit as st
-from supabase import Client, create_client
+La contraseña se guarda cifrada con bcrypt (pgcrypto: crypt + gen_salt('bf')),
+igual que en Ponycash. Las contraseñas que venían de Supabase Auth también son
+bcrypt, así que se copian tal cual y cada usuario conserva la suya.
 
+Crear un usuario (SQL Editor):
+    INSERT INTO public.usuarios (email, nombre, clave)
+    VALUES ('correo@dominio.com', 'Nombre', crypt('Contraseña', gen_salt('bf')));
+"""
 
-def _limpiar_secreto(nombre):
-    """
-    Lee [supabase].<nombre> quitando espacios, saltos de línea, comillas y
-    caracteres invisibles que se cuelan al copiar y pegar. La URL y la clave
-    solo pueden tener caracteres ASCII; si queda otro, se avisa con claridad.
-    """
-    valor = str(st.secrets["supabase"][nombre])
-    valor = "".join(
-        c for c in valor
-        if not c.isspace() and unicodedata.category(c) not in ("Cf", "Cc")
-    ).strip("\"'“”‘’")
-    if not valor.isascii():
-        raise ValueError(
-            f"El valor de [supabase] {nombre} en los Secrets tiene caracteres "
-            "no válidos. Bórrelo y vuelva a copiarlo directamente desde "
-            "Supabase (Project Settings → API Keys)."
-        )
-    return valor
+from database import ErrorConexion, conexion
 
 
-@st.cache_resource
-def obtener_cliente_supabase() -> Client:
-    return create_client(_limpiar_secreto("url"), _limpiar_secreto("key"))
-
-
-def iniciar_sesion(email: str, password: str):
+def iniciar_sesion(email: str, password: str) -> str:
+    """Devuelve el correo del usuario si el correo y la contraseña son válidos."""
     try:
-        cliente = obtener_cliente_supabase()
-    except ValueError as e:
-        raise Exception(str(e))
-
-    try:
-        return cliente.auth.sign_in_with_password(
-            {"email": email, "password": password}
-        )
+        with conexion() as conn:
+            fila = conn.execute(
+                """SELECT email, activo FROM public.usuarios
+                   WHERE lower(email) = lower(%s) AND clave = crypt(%s, clave)""",
+                (email.strip(), password),
+            ).fetchone()
+            if fila and fila["activo"]:
+                conn.execute("UPDATE public.usuarios SET ultimo_ingreso = now() WHERE email = %s",
+                             (fila["email"],))
+    except ErrorConexion:
+        raise
     except Exception as e:
-        raise Exception(f"No fue posible iniciar sesión: {e}")
+        raise Exception(f"No fue posible iniciar sesión: {e}") from e
+
+    if not fila:
+        raise Exception("❌ Correo o contraseña incorrectos.")
+    if not fila["activo"]:
+        raise Exception("❌ El usuario está inactivo. Comuníquese con el administrador.")
+    return fila["email"]
 
 
 def cerrar_sesion():
-    try:
-        obtener_cliente_supabase().auth.sign_out()
-    except Exception:
-        pass
+    """La sesión vive solo en st.session_state; no hay nada que cerrar en el servidor."""

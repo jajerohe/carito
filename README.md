@@ -1,6 +1,6 @@
 # Historia Clínica de Ortodoncia
 
-Aplicación web (Streamlit + Supabase) para gestionar la historia clínica de
+Aplicación web (Streamlit + PostgreSQL en Neon) para gestionar la historia clínica de
 ortodoncia, tomando como modelo el formato en papel del consultorio.
 
 ## Qué incluye
@@ -26,12 +26,17 @@ Para tenerla como un ícono más en la pantalla de inicio:
 
 ## Instalación
 
-1. **Base de datos.** En Supabase, abrir *SQL Editor* y ejecutar
-   `sql/schema.sql`.
-2. **Usuarios.** En *Authentication > Users* crear el usuario de cada persona
-   que usará la app (correo y contraseña). En *Authentication > Sign In /
-   Providers* **desactivar "Allow new users to sign up"** para que nadie más
-   pueda crear cuenta.
+1. **Base de datos.** En Neon (proyecto *carito*), abrir *SQL Editor* y
+   ejecutar `sql/schema.sql`.
+2. **Usuarios.** Cada persona que usará la app se crea en la tabla
+   `usuarios` (la contraseña queda cifrada con bcrypt):
+
+   ```sql
+   INSERT INTO public.usuarios (email, nombre, clave)
+   VALUES ('correo@dominio.com', 'Nombre', crypt('Contraseña', gen_salt('bf')));
+   ```
+
+   Para desactivar a alguien: `UPDATE public.usuarios SET activo = false WHERE email = '...';`
 3. **Credenciales.** Copiar `.streamlit/secrets.toml.example` como
    `.streamlit/secrets.toml` y completar los datos (o pegarlos en *Secrets* de
    Streamlit Cloud).
@@ -59,9 +64,9 @@ consentimiento) están en `textos.py`.
 
 ## Seguridad de los datos
 
-- Las tablas tienen RLS activado **sin políticas**, así la API pública de
-  Supabase no puede leer datos clínicos; la app usa la conexión directa a
-  Postgres.
+- Las tablas tienen RLS activado **sin políticas**, así ningún otro rol puede
+  leer datos clínicos; la app usa la conexión directa a Postgres.
+- Las contraseñas se guardan cifradas con bcrypt (pgcrypto), nunca en texto.
 - Cada registro guarda quién lo creó y quién lo modificó por última vez.
 - `secrets.toml` está en `.gitignore`: nunca debe subirse al repositorio.
 
@@ -72,5 +77,5 @@ DATABASE_URL=postgresql://usuario@host:puerto/base_de_pruebas pytest
 ```
 
 Usar una base de **pruebas** con `sql/schema.sql` aplicado (la prueba crea y
-borra registros). Para revisar la interfaz sin Supabase Auth:
+borra registros). Para revisar la interfaz sin iniciar sesión:
 `DEV_SIN_LOGIN=1 DATABASE_URL=... streamlit run app.py`.

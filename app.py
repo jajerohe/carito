@@ -181,8 +181,7 @@ def pantalla_login():
                     st.warning("⚠️ Debe ingresar el correo electrónico y la contraseña.")
                 else:
                     try:
-                        respuesta = iniciar_sesion(email.strip(), password)
-                        st.session_state["usuario"] = respuesta.user.email
+                        st.session_state["usuario"] = iniciar_sesion(email.strip(), password)
                         st.rerun()
                     except Exception as e:
                         st.error(str(e))
@@ -195,7 +194,7 @@ def pantalla_login():
 
 
 def usuario_actual():
-    # DEV_SIN_LOGIN permite probar la app localmente sin Supabase Auth.
+    # DEV_SIN_LOGIN permite probar la app localmente sin iniciar sesión.
     if os.environ.get("DEV_SIN_LOGIN"):
         return os.environ.get("DEV_USUARIO", "desarrollo@local")
     return st.session_state.get("usuario")
