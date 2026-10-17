@@ -26,50 +26,86 @@ fijar_titulo_pestana()
 st.markdown("""
 <style>
 h1, h2, h3 { color: #0B2A6F; }
-button[kind="primary"], button[kind="primaryFormSubmit"] {
-    background: linear-gradient(90deg, #1F6FE0 0%, #5B4FE0 55%, #8E3FD1 100%) !important;
-    border: none !important;
-    box-shadow: 0 4px 14px rgba(47, 91, 216, 0.25);
-}
-button[kind="primary"]:hover, button[kind="primaryFormSubmit"]:hover {
-    filter: brightness(1.07);
-}
-/* Ventanas, fichas y botones de acción (mismo manejo de Podex y Ponycash) */
-.hc-topbar{background:#fff;border:1px solid #DCE5F5;border-radius:8px;min-height:64px;padding:9px 16px;display:flex;
+/* Ventanas y fichas */
+.hc-topbar{background:#fff;border:1px solid #E3E8F0;border-radius:14px;min-height:64px;padding:12px 18px;display:flex;
   align-items:center;justify-content:space-between;box-shadow:inset 0 4px 0 #5B4FE0;margin-bottom:12px}
-.hc-top-title{color:#0B2A6F;font-size:18px;font-weight:800}
-.hc-top-subtitle{color:#5A6785;font-size:10px;margin-top:2px}
+.hc-top-title{color:#0B2A6F;font-size:18px;font-weight:700}
+.hc-top-subtitle{color:#5A6785;font-size:11px;margin-top:2px}
 .hc-dialog-header{margin:-6px 0 14px!important}
-.hc-section-title{color:#0B2A6F;font-size:15px;font-weight:800;margin:2px 0 5px}
-.hc-section-caption{color:#5A6785;font-size:11px;margin-bottom:8px}
+.hc-section-title{color:#0B2A6F;font-size:15px;font-weight:700;margin:2px 0 5px}
+.hc-section-caption{color:#5A6785;font-size:12px;margin-bottom:8px}
 .hc-dialog-section{margin-top:14px!important}
-.hc-ficha{display:grid;gap:12px 22px;background:#fff;border:1px solid #DCE5F5;border-radius:8px;padding:14px 16px;margin:6px 0;
-  box-shadow:0 2px 7px rgba(11,42,111,.04)}
-.hc-ficha-label{color:#5B4FE0;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px}
-.hc-ficha-valor{color:#1B2540;font-size:13px;margin-top:3px;line-height:1.35;word-break:break-word;font-weight:600}
-div[role="dialog"] div[data-testid="stForm"]{border-color:#DCE5F5!important;border-radius:8px!important;background:#fff!important}
-/* Botones circulares (contenedores "acciones_*"); el color sale de la key:
+.hc-ficha{display:grid;gap:12px 22px;background:#F7F9FC;border:1px solid #E3E8F0;border-radius:14px;padding:14px 18px;margin:6px 0}
+.hc-ficha-label{color:#5B4FE0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+.hc-ficha-valor{color:#1B2540;font-size:14px;margin-top:3px;line-height:1.35;word-break:break-word;font-weight:500}
+/* Título de tarjeta: pequeño, en mayúscula y espaciado */
+.hc-card-titulo,[data-testid="stMain"] [data-testid="stHeading"] h3{color:#33415C!important;font-size:13px!important;font-weight:700!important;
+  text-transform:uppercase;letter-spacing:.07em;margin:4px 0 10px!important;padding:0!important;line-height:1.4!important}
+[data-testid="stMain"] [data-testid="stHeading"] h3 [data-testid="stHeaderActionElements"]{display:none!important}
+.hc-card-cabeza{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.hc-card-cabeza .hc-card-titulo{margin:0!important}
+.hc-card-detalle{color:#5A6785;font-size:13px}
+.hc-card-detalle b{color:#0B2A6F}
+
+/* Botones ovalados con ícono y texto. El color sale de la key:
    btn_ok_, btn_info_, btn_warn_, btn_neutral_, btn_cancel_, btn_danger_. */
-[class*="st-key-acciones_"] div[data-testid="stButton"] button,[class*="st-key-acciones_"] div[data-testid="stFormSubmitButton"] button{
-  width:40px!important;height:40px!important;min-height:40px!important;padding:0!important;border-radius:50%!important;border:none!important;
-  background:linear-gradient(160deg,#5B4FE0,#0B2A6F)!important;box-shadow:0 2px 6px rgba(11,42,111,.25)!important;transition:transform .15s,box-shadow .15s}
-[class*="st-key-acciones_"] div[data-testid="stButton"] button:hover,[class*="st-key-acciones_"] div[data-testid="stFormSubmitButton"] button:hover{
-  transform:scale(1.08);box-shadow:0 3px 10px rgba(11,42,111,.35)!important;filter:none}
-[class*="st-key-acciones_"] div[data-testid="stButton"] button:disabled,[class*="st-key-acciones_"] div[data-testid="stFormSubmitButton"] button:disabled{
-  opacity:.35;transform:none;box-shadow:none!important}
-[class*="st-key-acciones_"] div[data-testid="stButton"] button span,[class*="st-key-acciones_"] div[data-testid="stFormSubmitButton"] button span{
-  color:#fff!important;font-size:20px!important;margin:0!important}
-.st-key-btn_usr_nuevo div[data-testid="stButton"] button,[class*="st-key-btn_ok_"] div[data-testid="stFormSubmitButton"] button,
-[class*="st-key-btn_ok_"] div[data-testid="stButton"] button{background:linear-gradient(160deg,#4cd3a8,#0f8a6a)!important}
-.st-key-btn_usr_editar div[data-testid="stButton"] button,[class*="st-key-btn_info_"] div[data-testid="stFormSubmitButton"] button,
-[class*="st-key-btn_info_"] div[data-testid="stButton"] button{background:linear-gradient(160deg,#4fb6f0,#1F6FE0)!important}
-.st-key-btn_usr_estado div[data-testid="stButton"] button,[class*="st-key-btn_warn_"] div[data-testid="stFormSubmitButton"] button,
-[class*="st-key-btn_warn_"] div[data-testid="stButton"] button{background:linear-gradient(160deg,#ffc629,#f08a1c)!important}
-.st-key-btn_usr_clave div[data-testid="stButton"] button,[class*="st-key-btn_neutral_"] div[data-testid="stFormSubmitButton"] button,
-[class*="st-key-btn_cancel_"] div[data-testid="stFormSubmitButton"] button,[class*="st-key-btn_cancel_"] div[data-testid="stButton"] button{
-  background:linear-gradient(160deg,#C3C9D6,#3c4459)!important}
-.st-key-btn_usr_eliminar div[data-testid="stButton"] button,[class*="st-key-btn_danger_"] div[data-testid="stFormSubmitButton"] button,
-[class*="st-key-btn_danger_"] div[data-testid="stButton"] button{background:linear-gradient(160deg,#e5533d,#8e1c1c)!important}
+div[data-testid="stButton"] button,div[data-testid="stFormSubmitButton"] button,div[data-testid="stDownloadButton"] button,
+div[data-testid="stPopover"] > div > button{
+  border-radius:999px!important;min-height:40px!important;padding:0 18px!important;font-weight:600!important;
+  border:1px solid #CBD5E1!important;background:#fff!important;color:#0B2A6F!important;box-shadow:none!important}
+div[data-testid="stButton"] button p,div[data-testid="stFormSubmitButton"] button p,div[data-testid="stDownloadButton"] button p{font-weight:600!important}
+div[data-testid="stButton"] button:hover,div[data-testid="stFormSubmitButton"] button:hover,div[data-testid="stDownloadButton"] button:hover{
+  border-color:#5B4FE0!important;color:#5B4FE0!important;background:#F7F8FF!important}
+div[data-testid] button[kind="primary"],div[data-testid] button[kind="primaryFormSubmit"]{background:#0B2A6F!important;border-color:#0B2A6F!important;color:#fff!important}
+div[data-testid] button[kind="primary"]:hover,div[data-testid] button[kind="primaryFormSubmit"]:hover{background:#1F4FB8!important;border-color:#1F4FB8!important;color:#fff!important}
+button:disabled{opacity:.45!important}
+[class*="st-key-acciones_"]{flex-wrap:wrap!important}
+[class*="st-key-acciones_"] button span[data-testid="stIconMaterial"]{font-size:18px!important}
+/* Barras de herramientas de las páginas */
+[class*="st-key-btn_ok_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button{background:#E9EFFD!important;border-color:#B9C8F2!important;color:#1F4FB8!important}
+[class*="st-key-btn_ok_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button:hover{background:#DCE6FC!important;border-color:#1F4FB8!important}
+[class*="st-key-btn_danger_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button{background:#fff!important;border-color:#F2B8B5!important;color:#C62828!important}
+[class*="st-key-btn_danger_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button:hover{background:#FDECEC!important;border-color:#C62828!important;color:#C62828!important}
+[class*="st-key-btn_warn_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button{background:#fff!important;border-color:#F3D19C!important;color:#B45309!important}
+[class*="st-key-btn_warn_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button:hover{background:#FFF6E8!important;border-color:#B45309!important;color:#B45309!important}
+/* En las ventanas, la acción principal va rellena */
+[class*="st-key-acciones_dlg_"] [class*="st-key-btn_ok_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button,[class*="st-key-acciones_dlg_"] [class*="st-key-btn_info_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button,
+[class*="st-key-acciones_dlg_"] [class*="st-key-btn_neutral_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button{background:#0B2A6F!important;border-color:#0B2A6F!important;color:#fff!important}
+[class*="st-key-acciones_dlg_"] [class*="st-key-btn_ok_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button:hover,[class*="st-key-acciones_dlg_"] [class*="st-key-btn_info_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button:hover,
+[class*="st-key-acciones_dlg_"] [class*="st-key-btn_neutral_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button:hover{background:#1F4FB8!important;border-color:#1F4FB8!important;color:#fff!important}
+[class*="st-key-acciones_dlg_"] [class*="st-key-btn_danger_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button{background:#C62828!important;border-color:#C62828!important;color:#fff!important}
+[class*="st-key-acciones_dlg_"] [class*="st-key-btn_warn_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button{background:#D97706!important;border-color:#D97706!important;color:#fff!important}
+[class*="st-key-acciones_dlg_"] [class*="st-key-btn_danger_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button:hover{background:#A51F1F!important;color:#fff!important}
+[class*="st-key-acciones_dlg_"] [class*="st-key-btn_warn_"] :is(div[data-testid="stButton"],div[data-testid="stFormSubmitButton"]) button:hover{background:#B45309!important;color:#fff!important}
+
+/* Tarjetas: formularios, recuadros, desplegables y tablas */
+[data-testid="stMain"] div[data-testid="stForm"],div[role="dialog"] div[data-testid="stForm"],
+[data-testid="stMain"] div[data-testid="stVerticalBlockBorderWrapper"]{
+  background:#fff!important;border:1px solid #E3E8F0!important;border-radius:16px!important;padding:22px 24px!important}
+[data-testid="stMain"] div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stForm"]{padding:0!important;border:none!important}
+[data-testid="stMain"] [data-testid="stExpander"] details{background:#fff!important;border:1px solid #E3E8F0!important;border-radius:16px!important}
+[data-testid="stMain"] [data-testid="stExpander"] summary{padding:14px 22px!important}
+[data-testid="stMain"] [data-testid="stExpander"] summary p{color:#33415C;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em}
+[data-testid="stDataFrame"]{border-radius:12px;overflow:hidden}
+[data-testid="stMetric"]{background:#fff;border:1px solid #E3E8F0;border-radius:16px;padding:14px 18px}
+[data-testid="stMetricLabel"] p{color:#5A6785!important;font-size:12px!important;text-transform:uppercase;letter-spacing:.06em;font-weight:600!important}
+[data-testid="stMetricValue"]{color:#0B2A6F!important}
+[data-testid="stMain"] hr{border-color:#EEF1F6!important;margin:14px 0!important}
+/* Pestañas */
+[data-testid="stTabs"] [data-baseweb="tab-list"]{gap:6px;border-bottom:1px solid #E3E8F0}
+[data-testid="stTabs"] button[data-baseweb="tab"]{border-radius:999px 999px 0 0;padding:8px 14px}
+[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] p{color:#0B2A6F;font-weight:700}
+[data-testid="stTabs"] [data-baseweb="tab-highlight"]{background:#5B4FE0!important}
+
+/* Campos: fondo suave y bordes redondeados */
+[data-testid="stTextInputRootElement"],[data-testid="stTextAreaRootElement"],[data-testid="stNumberInputContainer"],
+[data-testid="stDateInputField"],[data-testid="stSelectbox"]>div>div,[data-testid="stMultiSelect"]>div>div{
+  background:#F7F8FB!important;border:1px solid #DCE2EC!important;border-radius:10px!important}
+[data-testid="stTextInputRootElement"]:focus-within,[data-testid="stTextAreaRootElement"]:focus-within,
+[data-testid="stNumberInputContainer"]:focus-within,[data-testid="stDateInputField"]:focus-within,
+[data-testid="stSelectbox"]>div>div:focus-within,[data-testid="stMultiSelect"]>div>div:focus-within{
+  border-color:#5B4FE0!important;box-shadow:0 0 0 3px rgba(91,79,224,.12)!important}
+[data-testid="stWidgetLabel"] p{color:#33415C!important;font-weight:500!important}
 /* Los bloques que solo traen estilos o scripts no deben ocupar espacio */
 [data-testid="stMainBlockContainer"] div[data-testid="stElementContainer"]:has(style),
 [data-testid="stMainBlockContainer"] div[data-testid="stElementContainer"]:has(script) { display: none; }
@@ -158,6 +194,11 @@ div[data-testid="stElementContainer"]:has(style) { display: none; }
     border-radius: 3px !important; min-height: 36px !important; font-weight: 700 !important; margin-top: 2px;
 }
 .st-key-login_tarjeta [data-testid="stAlert"] { margin-top: 12px; }
+.st-key-login_tarjeta div[data-testid="stFormSubmitButton"] button {
+    background: linear-gradient(90deg, #1F6FE0 0%, #5B4FE0 55%, #8E3FD1 100%) !important;
+    border: none !important; color: #fff !important; padding: 0 18px !important;
+}
+.st-key-login_tarjeta [data-baseweb="base-input"] { background: #FFFFFF !important; }
 .login-pie { text-align: center; color: #7A86A3; font-size: 0.78rem; line-height: 1.5; padding: 0; }
 .login-pie b { color: #0B2A6F; }
 @media (max-width: 640px) {
@@ -245,7 +286,6 @@ def usuario_actual():
 # ============================================================
 
 def pagina_imprimir(historia, paciente, usuario):
-    st.header("Imprimir")
     partes = st.multiselect(
         "Secciones a incluir", list(PARTES), default=list(PARTES),
         format_func=PARTES.get,
@@ -264,7 +304,7 @@ def pagina_imprimir(historia, paciente, usuario):
         )
 
 
-ALTO_BARRA = 56
+ALTO_BARRA = 76
 
 
 def paciente_e_historia():
@@ -279,73 +319,131 @@ def paciente_e_historia():
     return paciente, historia
 
 
-def barra_superior(usuario, menu_colapsado, sesion=None):
-    """Barra fija a todo el ancho y estilos de la ventana (menú lateral fijo
-    debajo de la barra, contraíble a una franja de íconos)."""
-    ancho = 64 if menu_colapsado else 240
+# Íconos (trazos) del recuadro de la barra superior, uno por página.
+_TRAZOS = {
+    "pacientes": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>'
+                 '<path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    "historia": '<rect x="8" y="2" width="8" height="4" rx="1"/>'
+                '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6M9 16h4"/>',
+    "anexo": '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/>',
+    "pagos": '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
+    "firma": '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+    "evolucion": '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01"/>',
+    "imprimir": '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>'
+                '<rect x="6" y="14" width="12" height="8"/>',
+    "llave": '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/>',
+}
+# Título, ícono y descripción de cada página en la barra superior.
+ENCABEZADOS = {
+    "Pacientes": ("Pacientes", "pacientes", "Busque, registre y administre los pacientes"),
+    "Historia clínica": ("Historia clínica odontológica", "historia", None),
+    "Anexo de ortodoncia": ("Anexo de ortodoncia", "anexo", None),
+    "Presupuesto y pagos": ("Presupuesto y pagos", "pagos", None),
+    "Consentimiento": ("Consentimiento informado de ortodoncia", "firma", None),
+    "Evolución": ("Evolución del tratamiento", "evolucion", None),
+    "Imprimir": ("Imprimir historia clínica", "imprimir", None),
+    "Usuarios": ("Administración de Usuarios", "pacientes", "Usuarios, perfiles y acceso al sistema"),
+    "Mi cuenta": ("Mi cuenta", "llave", "Sus datos y su contraseña"),
+}
+
+
+def _icono(trazo, tamano=20, color="currentColor"):
+    return (f'<svg viewBox="0 0 24 24" width="{tamano}" height="{tamano}" fill="none" stroke="{color}" '
+            f'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{_TRAZOS[trazo]}</svg>')
+
+
+def texto_paciente(paciente, historia):
+    """Paciente e historia abiertos (se muestran bajo el título de la página)."""
+    if not paciente:
+        return None
+    texto = f"{nombre_completo(paciente)} · {paciente['tipo_documento']} {paciente['documento']}"
+    edad = calcular_edad(paciente["fecha_nacimiento"])
+    if edad is not None:
+        texto += f" · {edad} años"
+    if historia:
+        texto += f" · Historia #{historia['id']} ({historia['estado'].lower()})"
+    return texto
+
+
+def barra_superior(usuario, menu_colapsado, sesion, pagina, paciente, historia):
+    """Marco de la aplicación: menú lateral oscuro de arriba abajo con la marca,
+    barra superior blanca con el título de la página y el contenido en tarjetas."""
+    ancho = 72 if menu_colapsado else 264
     st.markdown(f"""
 <style>
-.hc-barra{{position:fixed;top:0;left:0;right:0;height:{ALTO_BARRA}px;z-index:1000003;display:flex;align-items:center;
-  background:linear-gradient(90deg,#0B2A6F 0%,#1F4FB8 50%,#5B4FE0 100%);box-shadow:inset 0 -3px 0 #8E3FD1,0 2px 8px rgba(11,42,111,.2)}}
-.hc-barra-logo{{width:240px;height:100%;flex:0 0 240px;background:#fff;display:flex;align-items:center;justify-content:center;
-  border-bottom:3px solid #8E3FD1;box-sizing:border-box}}
-.hc-barra-logo img{{height:30px;width:auto}}
-.hc-barra-nombre{{color:#fff;font-size:16px;font-weight:800;letter-spacing:.2px;padding-left:22px;white-space:nowrap}}
-.hc-barra-nombre span{{display:block;color:#cfdcfa;font-size:10px;font-weight:600;margin-top:1px}}
-.hc-barra-acciones{{margin-left:auto;display:flex;align-items:center;gap:12px;padding-right:18px}}
-.hc-usuario{{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:20px;
-  padding:7px 12px;font-size:11px;font-weight:700}}
-.hc-salir{{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
-  background:rgba(255,255,255,.14);text-decoration:none!important}}
-.hc-salir:hover{{background:rgba(255,255,255,.26)}}
+html,body,[data-testid="stAppViewContainer"],[data-testid="stMain"]{{background:#F4F6FA!important}}
+/* Marca, arriba del menú lateral */
+.hc-marca{{position:fixed;top:0;left:0;width:{ancho}px;height:{ALTO_BARRA}px;z-index:1000004;background:#0B2A6F;
+  display:flex;align-items:center;justify-content:center;padding:0 16px;box-sizing:border-box;border-bottom:1px solid rgba(255,255,255,.08)}}
+.hc-marca-logo{{background:#fff;border-radius:12px;width:100%;height:46px;display:flex;align-items:center;justify-content:center}}
+.hc-marca-logo img{{height:28px;width:auto}}
+.hc-marca-letra{{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;
+  font-weight:800;font-size:20px;background:linear-gradient(160deg,#1F6FE0,#5B4FE0 55%,#8E3FD1)}}
+/* Barra superior blanca */
+.hc-barra{{position:fixed;top:0;left:{ancho}px;right:0;height:{ALTO_BARRA}px;z-index:1000003;display:flex;align-items:center;gap:14px;
+  background:#fff;border-bottom:1px solid #E3E8F0;padding:0 28px;box-sizing:border-box}}
+.hc-barra-icono{{width:46px;height:46px;flex:0 0 46px;border-radius:12px;background:#EEF2FC;color:#1F4FB8;display:flex;
+  align-items:center;justify-content:center}}
+.hc-barra-titulo{{min-width:0}}
+.hc-barra-titulo b{{display:block;color:#0B2A6F;font-size:19px;font-weight:700;line-height:1.25;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}}
+.hc-barra-titulo span{{display:block;color:#5A6785;font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+.hc-barra-acciones{{margin-left:auto;display:flex;align-items:center;gap:10px;flex:0 0 auto}}
+.hc-usuario,.hc-salir{{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 16px;border-radius:999px;
+  border:1px solid #CBD5E1;background:#fff;color:#0B2A6F!important;font-size:13px;font-weight:600;text-decoration:none!important;white-space:nowrap}}
+.hc-usuario small{{color:#5A6785;font-weight:500;font-size:12px}}
+.hc-salir{{background:#0B2A6F;border-color:#0B2A6F;color:#fff!important}}
+.hc-salir:hover{{background:#1F4FB8;border-color:#1F4FB8}}
+/* Menú lateral oscuro */
 section[data-testid="stSidebar"],section[data-testid="stSidebar"][aria-expanded]{{position:fixed!important;top:{ALTO_BARRA}px!important;left:0!important;
   height:calc(100vh - {ALTO_BARRA}px)!important;width:{ancho}px!important;min-width:{ancho}px!important;max-width:{ancho}px!important;
-  transform:none!important;visibility:visible!important;z-index:1000002!important;background:#F3F6FC!important;border-right:1px solid #DCE5F5!important;
+  transform:none!important;visibility:visible!important;z-index:1000002!important;background:#0B2A6F!important;border-right:none!important;
   box-shadow:none!important}}
-section[data-testid="stSidebar"]>div{{padding:.5rem .55rem 1rem!important}}
+section[data-testid="stSidebar"]>div{{padding:.75rem .9rem 3.2rem!important;background:#0B2A6F!important}}
 [data-testid="stSidebarHeader"],[data-testid="stSidebarCollapseButton"],[data-testid="stExpandSidebarButton"],
 [data-testid="stSidebarResizeHandle"]{{display:none!important}}
 [data-testid="stSidebarUserContent"]{{padding:0!important}}
 [data-testid="stSidebarUserContent"] div[data-testid="stElementContainer"]:has(style){{display:none}}
 header[data-testid="stHeader"]{{display:none!important}}
 [data-testid="stMain"]{{margin-left:{ancho}px!important;width:calc(100% - {ancho}px)!important;max-width:calc(100% - {ancho}px)!important}}
-.block-container{{padding:{ALTO_BARRA + 18}px 1.45rem 2rem!important;max-width:100%!important}}
-/* Mismo marco de página de Podex y Ponycash: fondo gris claro y título de 19 px con línea debajo */
-html,body,[data-testid="stAppViewContainer"],[data-testid="stMain"]{{background:#F4F6FA!important}}
-[data-testid="stMain"] [data-testid="stHeading"] h2{{color:#0B2A6F!important;font-size:19px!important;font-weight:800!important;
-  padding:0 0 8px!important;margin:0 0 12px!important;border-bottom:1px solid #D5DEEF;line-height:1.35!important}}
-[data-testid="stMain"] [data-testid="stHeading"] h2 [data-testid="stHeaderActionElements"]{{display:none!important}}
-div[data-testid="stVerticalBlockBorderWrapper"]{{border-color:#DCE5F5!important;border-radius:8px!important;background:#fff!important}}
+.block-container{{padding:{ALTO_BARRA + 24}px 28px 2.5rem!important;max-width:100%!important}}
 @media(max-width:900px){{.block-container{{padding-left:.75rem!important;padding-right:.75rem!important}}}}
 .st-key-menu_toggle{{display:flex;justify-content:{'center' if menu_colapsado else 'flex-end'}}}
-.st-key-menu_toggle div[data-testid="stButton"]>button{{width:34px!important;height:30px!important;min-height:30px!important;padding:0!important;
-  border:1px solid #cdd8ee!important;border-radius:5px!important;background:#fff!important;color:#0B2A6F!important}}
-/* Opciones del menú */
-[class*="st-key-hc_menu"]{{gap:3px!important}}
-[class*="st-key-hc_menu"] div[data-testid="stButton"]>button{{justify-content:flex-start!important;min-height:38px!important;padding:9px!important;
-  border:none!important;border-radius:7px!important;background:transparent!important;color:#2b3a5c!important;box-shadow:none!important}}
+.st-key-menu_toggle div[data-testid="stButton"] button{{width:34px!important;height:30px!important;min-height:30px!important;padding:0!important;
+  border:1px solid rgba(255,255,255,.25)!important;border-radius:8px!important;background:transparent!important;color:#DCE5F5!important}}
+.st-key-menu_toggle div[data-testid="stButton"] button:hover{{background:rgba(255,255,255,.08)!important}}
+/* Opciones del menú (en el panel flotante van sobre fondo blanco) */
+[class*="st-key-hc_menu"]{{gap:4px!important}}
+[class*="st-key-hc_menu"] div[data-testid="stButton"]>button{{justify-content:flex-start!important;min-height:42px!important;padding:9px 14px!important;
+  border:none!important;border-radius:10px!important;background:transparent!important;color:#2b3a5c!important;box-shadow:none!important}}
 [class*="st-key-hc_menu"] div[data-testid="stButton"]>button:hover{{background:#e6edfa!important}}
 [class*="st-key-hc_menu"] div[data-testid="stButton"]>button[kind="primary"]{{color:#fff!important;
   background:linear-gradient(90deg,#1F6FE0 0%,#5B4FE0 55%,#8E3FD1 100%)!important}}
 [class*="st-key-hc_menu"] div[data-testid="stButton"]>button>div{{justify-content:flex-start!important;width:100%!important}}
-[class*="st-key-hc_menu"] div[data-testid="stButton"]>button p{{font-size:13px!important;font-weight:600!important;text-align:left!important}}
+[class*="st-key-hc_menu"] div[data-testid="stButton"]>button p{{font-size:14px!important;font-weight:600!important;text-align:left!important}}
 [class*="st-key-hc_menu"] div[data-testid="stButton"]>button span[data-testid="stIconMaterial"]{{font-size:19px!important}}
-.hc-menu-seccion{{color:#7A86A3;font-size:10px;font-weight:800;text-transform:uppercase;margin:16px 9px 6px;letter-spacing:.6px}}
-.hc-paciente{{color:#5A6785;font-size:13px;margin:-4px 0 10px}}
+section[data-testid="stSidebar"] [class*="st-key-hc_menu"] div[data-testid="stButton"]>button{{color:#DCE5F5!important}}
+section[data-testid="stSidebar"] [class*="st-key-hc_menu"] div[data-testid="stButton"]>button:hover{{background:rgba(255,255,255,.08)!important;color:#fff!important}}
+section[data-testid="stSidebar"] [class*="st-key-hc_menu"] div[data-testid="stButton"]>button[kind="primary"]{{color:#fff!important}}
+.hc-menu-seccion{{color:rgba(220,229,245,.55);font-size:11px;font-weight:700;text-transform:uppercase;margin:18px 14px 6px;letter-spacing:.08em}}
+.hc-pie{{position:fixed;left:0;bottom:0;width:{ancho}px;z-index:1000003;padding:14px 22px;box-sizing:border-box;color:#C9D6F2;font-size:12px;
+  display:{'none' if menu_colapsado else 'flex'};align-items:center;gap:9px;background:#0B2A6F}}
+.hc-pie i{{width:8px;height:8px;border-radius:50%;background:#34D399;flex:0 0 8px;box-shadow:0 0 0 3px rgba(52,211,153,.18)}}
 /* Franja contraída: un ícono por grupo que abre su panel a la derecha */
 [class*="st-key-grupo_"]{{display:flex;justify-content:center;margin-top:6px}}
-[class*="st-key-grupo_"] [data-testid="stPopover"],[class*="st-key-grupo_"] [data-testid="stPopover"]>div{{width:44px!important}}
-[class*="st-key-grupo_"] button{{width:44px!important;height:42px!important;min-height:42px!important;padding:0!important;
-  border:none!important;border-radius:7px!important;background:transparent!important;color:#2b3a5c!important;box-shadow:none!important}}
-[class*="st-key-grupo_"] button:hover{{background:#e6edfa!important}}
-[class*="st-key-grupo_"] button[kind="primary"]{{background:linear-gradient(90deg,#1F6FE0,#5B4FE0)!important;color:#fff!important}}
+[class*="st-key-grupo_"] [data-testid="stPopover"],[class*="st-key-grupo_"] [data-testid="stPopover"]>div{{width:46px!important}}
+[class*="st-key-grupo_"] button{{width:46px!important;height:44px!important;min-height:44px!important;padding:0!important;
+  border:none!important;border-radius:10px!important;background:transparent!important;color:#DCE5F5!important;box-shadow:none!important}}
+[class*="st-key-grupo_"] button:hover{{background:rgba(255,255,255,.08)!important}}
+[class*="st-key-grupo_"] div button[kind="primary"]{{background:linear-gradient(90deg,#1F6FE0,#5B4FE0)!important;color:#fff!important}}
 [class*="st-key-grupo_"] button span[data-testid="stIconMaterial"]{{font-size:23px!important;margin:0!important}}
 [class*="st-key-grupo_"] button div[aria-hidden="true"]{{display:none!important}}
-[data-testid="stPopoverBody"]:has(.hc-panel-titulo){{margin-left:51px!important;margin-top:-46px!important;
-  min-width:250px;border:1px solid #DCE5F5;box-shadow:4px 6px 18px rgba(11,42,111,.16)!important}}
-.hc-panel-titulo{{color:#0B2A6F;font-size:14px;font-weight:800;padding:2px 2px 8px;margin-bottom:4px;border-bottom:1px solid #e3e9f5}}
-@media(max-width:900px){{.hc-barra-nombre span,.hc-usuario{{display:none}}}}
-@media(max-width:640px){{.hc-barra-logo{{width:140px;flex-basis:140px}}.hc-barra-logo img{{height:24px}}.hc-barra-nombre{{display:none}}}}
+[data-testid="stPopoverBody"]:has(.hc-panel-titulo){{margin-left:58px!important;margin-top:-48px!important;
+  min-width:250px;border:1px solid #E3E8F0;border-radius:14px!important;box-shadow:4px 6px 18px rgba(11,42,111,.16)!important}}
+.hc-panel-titulo{{color:#0B2A6F;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:2px 2px 8px;
+  margin-bottom:4px;border-bottom:1px solid #e3e9f5}}
+@media(max-width:900px){{.hc-usuario{{display:none}}.hc-barra{{padding:0 14px}}}}
+@media(max-width:640px){{.hc-barra-icono,.hc-salir span{{display:none}}.hc-barra-titulo b{{font-size:16px}}}}
 </style>
 """, unsafe_allow_html=True)
     if menu_colapsado:
@@ -366,17 +464,33 @@ div[data-testid="stVerticalBlockBorderWrapper"]{{border-color:#DCE5F5!important;
 </script>
 """, unsafe_allow_javascript=True)
 
-    logo = (f'<img src="{_imagen_en_base64(LOGO, os.path.getmtime(LOGO))}" alt="{html.escape(NOMBRE_SISTEMA)}">'
-            if os.path.exists(LOGO) else f"<b>{html.escape(NOMBRE_SISTEMA)}</b>")
+    if menu_colapsado:
+        marca = f'<div class="hc-marca-letra">{html.escape(NOMBRE_SISTEMA[:1])}</div>'
+    elif os.path.exists(LOGO):
+        marca = (f'<div class="hc-marca-logo"><img src="{_imagen_en_base64(LOGO, os.path.getmtime(LOGO))}" '
+                 f'alt="{html.escape(NOMBRE_SISTEMA)}"></div>')
+    else:
+        marca = f'<div class="hc-marca-logo"><b>{html.escape(NOMBRE_SISTEMA)}</b></div>'
+
+    titulo, trazo, descripcion = ENCABEZADOS.get(pagina, (pagina, "historia", None))
+    if pagina in PAGINAS_HISTORIA:
+        descripcion = texto_paciente(paciente, historia) or descripcion
+    if sesion:
+        quien = (f"{html.escape(sesion['nombre'] or sesion['usuario'])}"
+                 f"<small>· {html.escape(sesion['perfil'])}</small>")
+    else:
+        quien = html.escape(usuario)
     st.markdown(f"""
+<div class="hc-marca">{marca}</div>
 <div class="hc-barra">
-  <div class="hc-barra-logo">{logo}</div>
-  <div class="hc-barra-nombre">{html.escape(NOMBRE_SISTEMA)}<span>Historia Clínica de Ortodoncia y Ortopedia Maxilar</span></div>
+  <div class="hc-barra-icono">{_icono(trazo, 22)}</div>
+  <div class="hc-barra-titulo"><b>{html.escape(titulo)}</b>{f'<span>{html.escape(descripcion)}</span>' if descripcion else ''}</div>
   <div class="hc-barra-acciones">
-    <div class="hc-usuario">👤 {html.escape(f"{sesion['nombre'] or usuario} · Usuario: {sesion['usuario']} · Perfil: {sesion['perfil']}" if sesion else usuario)}</div>
-    <a class="hc-salir" href="?logout=1" target="_self" title="Cerrar sesión" aria-label="Cerrar sesión"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h3a1 1 0 0 1 1 1v3M18 16v3a1 1 0 0 1-1 1h-3"/><path d="M5 4.5 11 3a1 1 0 0 1 1.2 1v16a1 1 0 0 1-1.2 1L5 19.5z" fill="#fff"/><path d="M14.5 12H22M19 9l3 3-3 3"/></svg></a>
+    <div class="hc-usuario">{_icono("pacientes", 16)}{quien}</div>
+    <a class="hc-salir" href="?logout=1" target="_self" title="Cerrar sesión"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg><span>Salir</span></a>
   </div>
 </div>
+<div class="hc-pie"><i></i>Base de datos conectada</div>
 """, unsafe_allow_html=True)
 
 
@@ -437,19 +551,6 @@ def menu_lateral(pagina, historia, menu_colapsado, es_administrador):
                 opciones_menu(clave_menu, opciones)
 
 
-def encabezado_paciente(paciente, historia):
-    """Paciente e historia abiertos, arriba del contenido."""
-    if not paciente:
-        return
-    texto = f"**{nombre_completo(paciente)}** · {paciente['tipo_documento']} {paciente['documento']}"
-    edad = calcular_edad(paciente["fecha_nacimiento"])
-    if edad is not None:
-        texto += f" · {edad} años"
-    if historia:
-        texto += f" · Historia #{historia['id']} ({historia['estado'].lower()})"
-    st.caption(texto)
-
-
 def main():
     # El botón de cerrar sesión de la barra superior es un enlace a ?logout=1.
     if st.query_params.get("logout"):
@@ -472,23 +573,20 @@ def main():
     es_administrador = os.environ.get("DEV_SIN_LOGIN") is not None or sesion["perfil"] == "Administrador"
 
     menu_colapsado = st.session_state.get("menu_colapsado", False)
-    barra_superior(usuario, menu_colapsado, sesion)
     paciente, historia = paciente_e_historia()
     pagina = pagina_actual(historia, es_administrador)
+    barra_superior(usuario, menu_colapsado, sesion, pagina, paciente, historia)
     menu_lateral(pagina, historia, menu_colapsado, es_administrador)
     # Vista previa del correo pendiente (por ejemplo, el de bienvenida) y resultado del envío.
     mostrar_envio_pendiente()
     if pagina in PAGINAS_ADMINISTRACION:
-        st.header("Administración de Usuarios" if pagina == "Usuarios" else "Mi cuenta")
         if pagina == "Usuarios":
             mostrar_modulo_usuarios(usuario)
         else:
             mostrar_mi_cuenta(usuario)
         return
-    # En Pacientes el paciente seleccionado ya se muestra junto a los botones.
+    # Al volver a Pacientes la tabla llega sin marca; no es que se haya quitado.
     if pagina != "Pacientes":
-        encabezado_paciente(paciente, historia)
-        # Al volver a Pacientes la tabla llega sin marca; no es que se haya quitado.
         st.session_state.pop("pacientes_habia_seleccion", None)
 
     # El PDF generado pertenece a una historia; se descarta al cambiar.

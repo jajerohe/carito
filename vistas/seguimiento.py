@@ -30,7 +30,6 @@ def _eliminar(registros, etiqueta, funcion, clave):
 # ============================================================
 
 def pagina_evolucion(historia, paciente, usuario):
-    st.header("Evolución del tratamiento")
     lista = repo.evoluciones(historia["id"])
 
     presupuesto = historia["presupuesto"] or {}
@@ -71,8 +70,6 @@ def pagina_evolucion(historia, paciente, usuario):
 # ============================================================
 
 def pagina_pagos(historia, paciente, usuario):
-    st.header("Presupuesto y pagos")
-
     cuenta = repo.estado_de_cuenta(historia)
     c1, c2, c3 = st.columns(3)
     c1.metric("Costo total", formato_pesos(cuenta["costo_total"]))

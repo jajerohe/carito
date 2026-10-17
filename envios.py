@@ -63,8 +63,8 @@ def ventana_envio(datos):
     with c_acciones:
         with st.container(key="acciones_dlg_envio", horizontal=True,
                           horizontal_alignment="right", gap="small"):
-            no_enviar = st.button("", icon=":material/close:", key="btn_cancel_envio", help="No enviar")
-            enviar = st.button("", icon=":material/send:", key="btn_ok_envio", help="Enviar",
+            no_enviar = st.button("No enviar", icon=":material/close:", key="btn_cancel_envio", help="No enviar")
+            enviar = st.button("Enviar", icon=":material/send:", key="btn_ok_envio", help="Enviar",
                                disabled=sin_config or not datos["para"])
 
     if no_enviar:

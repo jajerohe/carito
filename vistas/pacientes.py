@@ -78,7 +78,7 @@ def _formulario_paciente(paciente, clave, boton):
         )
 
         with st.container(key=f"acciones_dlg_{clave}", horizontal=True, horizontal_alignment="right", gap="small"):
-            enviar = st.form_submit_button("", icon=boton[0], key=boton[1], help=boton[2])
+            enviar = st.form_submit_button(boton[2], icon=boton[0], key=boton[1])
 
     if not enviar:
         return None
@@ -154,9 +154,9 @@ def ventana_eliminar_paciente(paciente, historias):
     with st.form(f"form_eliminar_paciente_{paciente['id']}"):
         with st.container(key="acciones_dlg_eliminar_paciente", horizontal=True,
                           horizontal_alignment="right", gap="small"):
-            cancelar = st.form_submit_button("", icon=":material/close:", key="btn_cancel_eliminar_paciente",
+            cancelar = st.form_submit_button("Cancelar", icon=":material/close:", key="btn_cancel_eliminar_paciente",
                                              help="Cancelar")
-            confirmar = st.form_submit_button("", icon=":material/delete:", key="btn_danger_eliminar_paciente",
+            confirmar = st.form_submit_button("Eliminar", icon=":material/delete:", key="btn_danger_eliminar_paciente",
                                               help="Sí, eliminar")
     if cancelar:
         st.rerun()
@@ -184,7 +184,7 @@ def ventana_nueva_historia(paciente, usuario):
         motivo = st.text_area("Motivo de la consulta")
         with st.container(key="acciones_dlg_nueva_historia", horizontal=True,
                           horizontal_alignment="right", gap="small"):
-            crear = st.form_submit_button("", icon=":material/note_add:", key="btn_ok_nueva_historia",
+            crear = st.form_submit_button("Crear historia", icon=":material/note_add:", key="btn_ok_nueva_historia",
                                           help="Crear historia clínica")
     if not crear:
         return
@@ -202,14 +202,16 @@ def ventana_nueva_historia(paciente, usuario):
 # PÁGINA
 # ============================================================
 def pagina_pacientes(usuario):
-    st.header("Pacientes")
-
     mensaje = st.session_state.pop("mensaje_pacientes", None)
     if mensaje:
         tipo, texto = mensaje
         (st.warning if tipo == "warning" else st.success)(texto)
 
-    texto = st.text_input("🔎 Buscar paciente", placeholder="Digite nombre, apellido o documento...")
+    # Barra de búsqueda y acciones, como en el resto del sistema
+    c_busca, c_acciones = st.columns([1, 1.3], vertical_alignment="center")
+    with c_busca:
+        texto = st.text_input("Buscar paciente", label_visibility="collapsed",
+                              placeholder="🔎  Buscar paciente por nombre, apellido o documento…")
     try:
         resultados = repo.buscar_pacientes(texto)
     except Exception as e:
@@ -238,27 +240,43 @@ def pagina_pacientes(usuario):
         else:
             fila = {**fila, "historias": len(repo.historias_de_paciente(paciente_id))}
 
-    c_sel, c_acciones = st.columns([3, 1.4], vertical_alignment="center")
-    with c_sel:
-        if fila is not None:
-            st.markdown(f"**Paciente seleccionado:** {escape(fila['tipo_documento'])} "
-                        f"{escape(fila['documento'])} · {escape(nombre_completo(fila))}")
-        else:
-            st.caption("☝️ Seleccione un paciente en la tabla para administrarlo.")
     with c_acciones:
         with st.container(key="acciones_pacientes", horizontal=True, horizontal_alignment="right", gap="small"):
-            if st.button("", icon=":material/person_add:", key="btn_ok_pac_nuevo", help="Nuevo paciente"):
+            if st.button("Nuevo paciente", icon=":material/person_add:", key="btn_ok_pac_nuevo", help="Nuevo paciente"):
                 ventana_crear_paciente(usuario)
-            if st.button("", icon=":material/edit:", key="btn_info_pac_editar", disabled=fila is None,
+            if st.button("Editar", icon=":material/edit:", key="btn_info_pac_editar", disabled=fila is None,
                          help="Editar paciente"):
                 ventana_editar_paciente(fila, usuario)
-            if st.button("", icon=":material/note_add:", key="btn_neutral_pac_historia", disabled=fila is None,
+            if st.button("Nueva historia", icon=":material/note_add:", key="btn_neutral_pac_historia", disabled=fila is None,
                          help="Nueva historia clínica"):
                 ventana_nueva_historia(fila, usuario)
-            if st.button("", icon=":material/delete:", key="btn_danger_pac_eliminar", disabled=fila is None,
+            if st.button("Eliminar", icon=":material/delete:", key="btn_danger_pac_eliminar", disabled=fila is None,
                          help="Eliminar paciente"):
                 ventana_eliminar_paciente(fila, fila["historias"])
 
+    with st.container(border=True):
+        _tabla_pacientes(resultados, fila)
+
+    if fila is not None:
+        with st.container(border=True):
+            _historias_del_paciente(fila, usuario)
+
+
+def _titulo_tarjeta(titulo, detalle=None):
+    """Título de la tarjeta a la izquierda y, a la derecha, lo seleccionado."""
+    st.markdown(
+        f'<div class="hc-card-cabeza"><div class="hc-card-titulo">{titulo}</div>'
+        + (f'<div class="hc-card-detalle">{detalle}</div>' if detalle else "") + "</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def _tabla_pacientes(resultados, fila):
+    _titulo_tarjeta(
+        "Pacientes registrados",
+        f"<b>Seleccionado:</b> {escape(fila['tipo_documento'])} {escape(fila['documento'])} · "
+        f"{escape(nombre_completo(fila))}" if fila is not None else "☝️ Seleccione un paciente en la tabla",
+    )
     if not resultados:
         st.info("ℹ️ No existen pacientes que coincidan con el criterio de búsqueda.")
     else:
@@ -271,40 +289,34 @@ def pagina_pacientes(usuario):
             "HISTORIAS": r["historias"],
         } for r in resultados])
         tabla["EDAD"] = tabla["EDAD"].map(lambda e: "—" if pd.isna(e) else str(int(e)))
-        st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
         st.dataframe(
             tabla, key="tabla_pacientes", on_select="rerun", selection_mode="single-row",
             hide_index=True, width="stretch", height=min(38 + 35 * len(tabla), 640),
         )
 
-    if fila is not None:
-        _historias_del_paciente(fila, usuario)
-
 
 def _historias_del_paciente(paciente, usuario):
     historias = repo.historias_de_paciente(paciente["id"])
-    st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="hc-section-title">Historias clínicas de {escape(nombre_completo(paciente))}</div>',
-                unsafe_allow_html=True)
     if not historias:
-        st.caption("Este paciente aún no tiene historias clínicas. Use el botón de nueva historia clínica.")
+        _titulo_tarjeta(f"Historias clínicas de {escape(nombre_completo(paciente))}")
+        st.caption("Este paciente aún no tiene historias clínicas. Use el botón Nueva historia.")
         return
 
     seleccion = st.session_state.get(f"tabla_historias_{paciente['id']}")
     filas = seleccion.selection.rows if seleccion else []
     historia = historias[filas[0]] if filas and filas[0] < len(historias) else None
 
-    c_sel, c_acciones = st.columns([3, 1.4], vertical_alignment="center")
-    with c_sel:
-        if historia is not None:
-            st.markdown(f"**Historia seleccionada:** {formato_fecha(historia['fecha_apertura'])} · "
-                        f"{escape(historia['estado'])}")
-        else:
-            st.caption("☝️ Seleccione una historia clínica para abrirla.")
+    c_titulo, c_acciones = st.columns([3, 1], vertical_alignment="center")
+    with c_titulo:
+        _titulo_tarjeta(
+            f"Historias clínicas de {escape(nombre_completo(paciente))}",
+            f"<b>Seleccionada:</b> {formato_fecha(historia['fecha_apertura'])} · {escape(historia['estado'])}"
+            if historia is not None else "☝️ Seleccione una historia para abrirla",
+        )
     with c_acciones:
         with st.container(key="acciones_historias", horizontal=True, horizontal_alignment="right", gap="small"):
-            if st.button("", icon=":material/folder_open:", key="btn_info_hist_abrir", disabled=historia is None,
-                         help="Abrir historia clínica"):
+            if st.button("Abrir historia", icon=":material/folder_open:", key="btn_ok_hist_abrir",
+                         disabled=historia is None):
                 st.session_state["historia_id"] = historia["id"]
                 st.session_state["ir_a"] = "Historia clínica"
                 st.rerun()
@@ -314,7 +326,6 @@ def _historias_del_paciente(paciente, usuario):
         "ESTADO": h["estado"],
         "MOTIVO DE CONSULTA": h["motivo_consulta"] or "—",
     } for h in historias])
-    st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
     st.dataframe(
         tabla, key=f"tabla_historias_{paciente['id']}", on_select="rerun", selection_mode="single-row",
         hide_index=True, width="stretch", height=min(38 + 35 * len(tabla), 400),

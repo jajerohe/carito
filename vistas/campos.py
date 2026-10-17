@@ -84,7 +84,7 @@ def formulario_seccion(seccion, valores, prefijo):
     with st.form(f"{prefijo}:{seccion.clave}"):
         for grupo in seccion.grupos:
             if len(seccion.grupos) > 1 or grupo.titulo != seccion.titulo:
-                st.markdown(f"**{grupo.titulo}**")
+                st.markdown(f'<div class="hc-card-titulo">{grupo.titulo}</div>', unsafe_allow_html=True)
             campos = list(grupo.campos)
             for inicio in range(0, len(campos), grupo.columnas):
                 columnas = st.columns(grupo.columnas)

@@ -27,8 +27,6 @@ def _pestanas_secciones(historia, secciones, usuario, notas=None):
 
 
 def pagina_historia(historia, paciente, usuario):
-    st.header("Historia clínica odontológica")
-
     with st.form(f"datos_historia_{historia['id']}"):
         c1, c2 = st.columns(2)
         fecha = c1.date_input("Fecha de apertura", value=historia["fecha_apertura"],
@@ -49,13 +47,10 @@ def pagina_historia(historia, paciente, usuario):
 
 
 def pagina_ortodoncia(historia, paciente, usuario):
-    st.header("Anexo de ortodoncia")
     _pestanas_secciones(historia, SECCIONES_ORTODONCIA, usuario)
 
 
 def pagina_consentimiento(historia, paciente, usuario):
-    st.header("Consentimiento informado de ortodoncia")
-
     valores = dict(historia["consentimiento"] or {})
     # Valores sugeridos la primera vez
     valores.setdefault("firmante_nombre", nombre_completo(paciente))

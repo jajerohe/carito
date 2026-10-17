@@ -158,7 +158,7 @@ def ventana_crear_usuario():
             ),
         )
         with st.container(key="acciones_dlg_crear", horizontal=True, horizontal_alignment="right", gap="small"):
-            crear = st.form_submit_button("", icon=":material/person_add:", key="btn_ok_crear", help="Crear usuario")
+            crear = st.form_submit_button("Crear usuario", icon=":material/person_add:", key="btn_ok_crear", help="Crear usuario")
 
     if not crear:
         return
@@ -229,7 +229,7 @@ def ventana_editar_usuario(fila, email_actual):
                               disabled=es_mismo_usuario,
                               help="No puede cambiar su propio perfil." if es_mismo_usuario else None)
         with st.container(key="acciones_dlg_editar", horizontal=True, horizontal_alignment="right", gap="small"):
-            guardar = st.form_submit_button("", icon=":material/save:", key="btn_info_editar", help="Guardar cambios")
+            guardar = st.form_submit_button("Guardar cambios", icon=":material/save:", key="btn_info_editar", help="Guardar cambios")
 
     if not guardar:
         return
@@ -273,7 +273,7 @@ def ventana_contrasena(fila):
         with c2:
             confirmacion = st.text_input("Confirmar contraseña", type="password")
         with st.container(key="acciones_dlg_clave", horizontal=True, horizontal_alignment="right", gap="small"):
-            cambiar = st.form_submit_button("", icon=":material/key:", key="btn_neutral_clave",
+            cambiar = st.form_submit_button("Cambiar contraseña", icon=":material/key:", key="btn_neutral_clave",
                                             help="Cambiar contraseña")
 
     if not cambiar:
@@ -305,8 +305,8 @@ def ventana_estado(fila):
 
     with st.form(f"form_estado_{fila['usuario']}"):
         with st.container(key="acciones_dlg_estado", horizontal=True, horizontal_alignment="right", gap="small"):
-            cancelar = st.form_submit_button("", icon=":material/close:", key="btn_cancel_estado", help="Cancelar")
-            confirmar = st.form_submit_button("", icon=":material/check:", key="btn_warn_estado",
+            cancelar = st.form_submit_button("Cancelar", icon=":material/close:", key="btn_cancel_estado", help="Cancelar")
+            confirmar = st.form_submit_button(accion.capitalize(), icon=":material/check:", key="btn_warn_estado",
                                               help=f"Sí, {accion}")
     if cancelar:
         st.rerun()
@@ -331,8 +331,8 @@ def ventana_eliminar(fila):
 
     with st.form(f"form_eliminar_{fila['usuario']}"):
         with st.container(key="acciones_dlg_eliminar", horizontal=True, horizontal_alignment="right", gap="small"):
-            cancelar = st.form_submit_button("", icon=":material/close:", key="btn_cancel_eliminar", help="Cancelar")
-            confirmar = st.form_submit_button("", icon=":material/delete:", key="btn_danger_eliminar",
+            cancelar = st.form_submit_button("Cancelar", icon=":material/close:", key="btn_cancel_eliminar", help="Cancelar")
+            confirmar = st.form_submit_button("Eliminar", icon=":material/delete:", key="btn_danger_eliminar",
                                               help="Sí, eliminar")
     if cancelar:
         st.rerun()
@@ -362,7 +362,10 @@ def mostrar_modulo_usuarios(email_actual):
         st.exception(e)
         return
 
-    texto = st.text_input("🔎 Buscar usuario", placeholder="Digite usuario, nombre, correo o perfil...")
+    c_busca, c_acciones = st.columns([1, 1.9], vertical_alignment="center")
+    with c_busca:
+        texto = st.text_input("Buscar usuario", label_visibility="collapsed",
+                              placeholder="🔎  Buscar usuario por usuario, nombre, correo o perfil…")
     if texto:
         buscado = texto.lower()
         usuarios = usuarios[usuarios.apply(
@@ -378,30 +381,33 @@ def mostrar_modulo_usuarios(email_actual):
     es_mismo_usuario = fila is not None and fila["email"] == email_actual
     activo = bool(fila["activo"]) if fila is not None else None
 
-    c_sel, c_acciones = st.columns([3, 1.4], vertical_alignment="center")
-    with c_sel:
-        if fila is not None:
-            st.markdown(f"**Usuario seleccionado:** {fila['usuario']} · {escape(fila['nombre'] or '')}")
-        else:
-            st.caption("☝️ Seleccione un usuario en la tabla para administrarlo.")
     with c_acciones:
         with st.container(key="acciones_usuarios", horizontal=True, horizontal_alignment="right", gap="small"):
-            if st.button("", icon=":material/person_add:", key="btn_usr_nuevo", help="Nuevo usuario"):
+            if st.button("Nuevo usuario", icon=":material/person_add:", key="btn_ok_usr_nuevo", help="Nuevo usuario"):
                 ventana_crear_usuario()
-            if st.button("", icon=":material/edit:", key="btn_usr_editar", disabled=fila is None,
+            if st.button("Editar", icon=":material/edit:", key="btn_info_usr_editar", disabled=fila is None,
                          help="Editar usuario"):
                 ventana_editar_usuario(fila, email_actual)
-            if st.button("", icon=":material/key:", key="btn_usr_clave", disabled=fila is None,
+            if st.button("Contraseña", icon=":material/key:", key="btn_neutral_usr_clave", disabled=fila is None,
                          help="Cambiar contraseña"):
                 ventana_contrasena(fila)
-            if st.button("", icon=":material/person_off:" if activo is not False else ":material/person_check:",
-                         key="btn_usr_estado", disabled=fila is None or es_mismo_usuario,
+            if st.button("Activar" if activo is False else "Desactivar", icon=":material/person_off:" if activo is not False else ":material/person_check:",
+                         key="btn_warn_usr_estado", disabled=fila is None or es_mismo_usuario,
                          help="Activar usuario" if activo is False else "Desactivar usuario"):
                 ventana_estado(fila)
-            if st.button("", icon=":material/delete:", key="btn_usr_eliminar",
+            if st.button("Eliminar", icon=":material/delete:", key="btn_danger_usr_eliminar",
                          disabled=fila is None or es_mismo_usuario, help="Eliminar usuario"):
                 ventana_eliminar(fila)
 
+    with st.container(border=True):
+        detalle = (f"<b>Seleccionado:</b> {escape(fila['usuario'])} · {escape(fila['nombre'] or '')}"
+                   if fila is not None else "☝️ Seleccione un usuario en la tabla")
+        st.markdown(f'<div class="hc-card-cabeza"><div class="hc-card-titulo">Usuarios del sistema</div>'
+                    f'<div class="hc-card-detalle">{detalle}</div></div>', unsafe_allow_html=True)
+        _tabla_usuarios(usuarios)
+
+
+def _tabla_usuarios(usuarios):
     if usuarios.empty:
         st.info("ℹ️ No existen usuarios que coincidan con el criterio de búsqueda.")
         return
@@ -413,7 +419,6 @@ def mostrar_modulo_usuarios(email_actual):
         "CORREO": usuarios["email"],
         "ESTADO": usuarios["activo"].map(lambda v: "🟢 Activo" if v else "🔴 Inactivo"),
     })
-    st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
     st.dataframe(
         tabla, key="tabla_usuarios", on_select="rerun", selection_mode="single-row",
         hide_index=True, width="stretch", height=min(38 + 35 * len(tabla), 640),
@@ -436,7 +441,7 @@ def mostrar_mi_cuenta(email_actual):
 
     with st.container(border=True):
         st.markdown(
-            '<div class="hc-section-title">🔑 Cambiar mi contraseña</div>'
+            '<div class="hc-card-titulo">Cambiar mi contraseña</div>'
             f'<div class="hc-section-caption">Mínimo {LONGITUD_MINIMA_CONTRASENA} caracteres.</div>',
             unsafe_allow_html=True,
         )
@@ -447,8 +452,8 @@ def mostrar_mi_cuenta(email_actual):
                 nueva = st.text_input("Nueva contraseña", type="password")
             with c2:
                 confirmacion = st.text_input("Confirmar nueva contraseña", type="password")
-            with st.container(key="acciones_mi_clave", horizontal=True, horizontal_alignment="right", gap="small"):
-                cambiar = st.form_submit_button("", icon=":material/key:", key="btn_ok_mi_clave",
+            with st.container(key="acciones_dlg_mi_clave", horizontal=True, horizontal_alignment="right", gap="small"):
+                cambiar = st.form_submit_button("Cambiar contraseña", icon=":material/key:", key="btn_ok_mi_clave",
                                                 help="Cambiar contraseña")
     if not cambiar:
         return
